@@ -1,0 +1,19 @@
+{
+  "name": "contracts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "forge clean && forge build",
+    "local": "anvil -a 5",
+    "dev": "source .env && forge create --rpc-url http://127.0.0.1:8545 --private-key $PRIVATE_KEY src/Counter.sol:Counter --json > contractInfo.json",
+    "deploy-mumbai": "source .env && forge create --rpc-url https://rpc.ankr.com/polygon_mumbai --private-key $PRIVATE_KEY src/Counter.sol:Counter --legacy  --json > contractInfo.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cd": "^0.3.3",
+    "concurrently": "^8.1.0"
+  }
+}
