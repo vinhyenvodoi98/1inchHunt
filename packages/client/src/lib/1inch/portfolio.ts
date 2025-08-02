@@ -28,7 +28,7 @@ export interface PortfolioError {
 }
 
 /**
- * Fetches portfolio data from 1inch API for a given wallet address and chain
+ * Fetches portfolio data from 1inch API v4 for a given wallet address and chain
  * @param walletAddress - The wallet address to fetch portfolio for
  * @param chainId - The blockchain chain ID (e.g., 1 for Ethereum, 137 for Polygon)
  * @returns Promise<PortfolioResponse> - Portfolio data including tokens and total value
@@ -55,7 +55,7 @@ export async function fetchPortfolioData(
 
     // Make API request
     const response = await axios.get(
-      `https://api.1inch.dev/portfolio/v5.2/${chainId}/portfolio/${walletAddress}`,
+      `https://api.1inch.dev/portfolio/portfolio/v4/overview/erc20/current_value?addresses=${walletAddress}&chain_id=${chainId}`,
       {
         headers: {
           'Authorization': `Bearer ${apiKey}`,
@@ -66,30 +66,31 @@ export async function fetchPortfolioData(
     );
 
     // Validate response
-    if (!response.data || !Array.isArray(response.data.tokens)) {
-      throw new Error('Invalid response format from 1inch API');
+    if (!response.data || !response.data.data) {
+      throw new Error('Invalid response format from 1inch API v4');
     }
 
-    // Transform and validate the data
-    const tokens: TokenBalance[] = response.data.tokens
-      .filter((token: any) => {
+    // Transform and validate the data for v4 API
+    const tokens: TokenBalance[] = Object.entries(response.data.data)
+      .filter(([address, tokenData]: [string, any]) => {
         // Filter out tokens with zero balance or invalid data
-        return token.balance && 
-               parseFloat(token.balance) > 0 && 
-               token.symbol && 
-               token.name;
+        return tokenData && 
+               tokenData.balance && 
+               parseFloat(tokenData.balance) > 0 && 
+               tokenData.symbol && 
+               tokenData.name;
       })
-      .map((token: any) => ({
-        symbol: token.symbol,
-        name: token.name,
-        address: token.address,
-        decimals: token.decimals || 18,
-        logoURI: token.logoURI,
-        tags: token.tags || [],
-        balance: token.balance,
-        price: parseFloat(token.price) || 0,
-        value: parseFloat(token.value) || 0,
-        change24h: token.change24h ? parseFloat(token.change24h) : undefined,
+      .map(([address, tokenData]: [string, any]) => ({
+        symbol: tokenData.symbol,
+        name: tokenData.name,
+        address: address,
+        decimals: tokenData.decimals || 18,
+        logoURI: tokenData.logoURI,
+        tags: tokenData.tags || [],
+        balance: tokenData.balance,
+        price: parseFloat(tokenData.price) || 0,
+        value: parseFloat(tokenData.value) || 0,
+        change24h: tokenData.change24h ? parseFloat(tokenData.change24h) : undefined,
       }))
       .sort((a: TokenBalance, b: TokenBalance) => b.value - a.value); // Sort by value descending
 
@@ -110,14 +111,14 @@ export async function fetchPortfolioData(
         // Server responded with error status
         throw {
           error: 'API_ERROR',
-          message: `1inch API error: ${error.response.status} - ${error.response.data?.message || error.message}`,
+          message: `1inch API v4 error: ${error.response.status} - ${error.response.data?.message || error.message}`,
           status: error.response.status,
         } as PortfolioError;
       } else if (error.request) {
         // Request was made but no response received
         throw {
           error: 'NETWORK_ERROR',
-          message: 'Network error: Unable to reach 1inch API',
+          message: 'Network error: Unable to reach 1inch API v4',
         } as PortfolioError;
       } else {
         // Something else happened

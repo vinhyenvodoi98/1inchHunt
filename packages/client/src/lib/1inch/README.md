@@ -1,214 +1,260 @@
 # 1inch API Integration
 
-This directory contains the integration with the 1inch Portfolio API for fetching real-time token balances and portfolio data.
+This directory contains the centralized 1inch API integration for the HashHunt application.
 
-## Setup
+## 🏗️ **Architecture**
 
-### 1. Get 1inch API Key
-
-1. Visit [1inch Developer Portal](https://portal.1inch.dev/)
-2. Sign up for a free account
-3. Create a new API key
-4. Copy your API key
-
-### 2. Configure Environment Variables
-
-Create a `.env.local` file in the `packages/client` directory:
-
-```env
-# 1inch API Configuration
-NEXT_PUBLIC_1INCH_API_KEY=your_1inch_api_key_here
-
-# WalletConnect Configuration
-NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_wallet_connect_project_id_here
-```
-
-### 3. Install Dependencies
-
-Make sure axios is installed:
-
-```bash
-npm install axios
-# or
-pnpm add axios
-```
-
-## API Integration
-
-### Portfolio Service (`portfolio.ts`)
-
-The main service file contains:
-
-- **`fetchPortfolioData()`** - Fetches portfolio data from 1inch API
-- **`getTokenIcon()`** - Maps token symbols to emoji icons
-- **`getTokenColor()`** - Maps token symbols to Tailwind gradient classes
-- **TypeScript interfaces** for type safety
-
-### API Endpoint
+### **Centralized API Service**
+All 1inch API calls are now centralized in `lib/1inch/api.ts`:
 
 ```
-GET https://api.1inch.dev/portfolio/v5.2/{chain_id}/portfolio/{wallet_address}
+Frontend Components → Backend API Routes → Centralized 1inch Service → 1inch API
 ```
 
-### Supported Chains
+### **Benefits**
+- **🔒 Security**: API keys stored securely on backend
+- **🔄 Consistency**: Single source of truth for API calls
+- **🛠️ Maintainability**: Easy to update API endpoints and logic
+- **📊 Data Enrichment**: Centralized token icon and color mapping
+- **⚡ Performance**: Optimized request handling and caching
 
-The API supports multiple chains including:
-- Ethereum (1)
-- Polygon (137)
-- BSC (56)
-- Arbitrum (42161)
-- Optimism (10)
-- And many more...
+## 📁 **File Structure**
 
-## Usage
+```
+lib/1inch/
+├── api.ts              # Centralized 1inch API service
+├── README.md           # This documentation
+├── swap.ts             # Swap functionality (future)
+├── tokens.ts           # Token utilities (future)
+├── types.ts            # Shared types (future)
+└── utils.ts            # Utility functions (future)
+```
 
-### Basic Usage
+## 🚀 **API Endpoints**
 
+### **Portfolio Data**
+- **Single Chain**: `GET /api/portfolio/{address}?chainId={chainId}`
+- **All Chains**: `GET /api/portfolio/all/{address}`
+
+### **Supported Chains**
+All chains defined in `wagmiConfig.ts`:
+1. **🔵 Ethereum** (Mainnet)
+2. **🟣 Polygon**
+3. **🔴 Optimism**
+4. **🔵 Arbitrum**
+5. **🔵 Base**
+6. **🟡 BNB Chain**
+7. **🔴 Avalanche**
+8. **🟢 Gnosis**
+
+## 🔧 **Core Components**
+
+### **1. OneInchAPI Class**
 ```typescript
-import { fetchPortfolioData } from '@/lib/1inch/portfolio';
+class OneInchAPI {
+  private apiKey: string;
+  private baseURL = 'https://api.1inch.dev';
 
-// Fetch portfolio data
-const portfolioData = await fetchPortfolioData(
-  '0x1234...5678', // wallet address
-  1 // chain ID (Ethereum)
-);
-
-console.log(portfolioData.tokens); // Array of token balances
-console.log(portfolioData.totalValue); // Total portfolio value
-```
-
-### Error Handling
-
-The service includes comprehensive error handling:
-
-```typescript
-try {
-  const portfolioData = await fetchPortfolioData(address, chainId);
-  // Handle success
-} catch (error) {
-  const portfolioError = error as PortfolioError;
-  console.error(portfolioError.message);
-  // Handle error
+  // Methods:
+  - fetchPortfolioData(walletAddress, chainId, chainName?)
+  - fetchPortfolioDataForChains(walletAddress, chains)
+  - makeRequest<T>(endpoint, timeout)
 }
 ```
 
-### Error Types
+### **2. Utility Functions**
+```typescript
+// Token icon mapping
+getTokenIcon(symbol: string, name: string): string
 
-- **`API_ERROR`** - Server responded with error status
-- **`NETWORK_ERROR`** - Unable to reach 1inch API
-- **`REQUEST_ERROR`** - Request configuration error
-- **`VALIDATION_ERROR`** - Invalid input parameters
+// Token color mapping
+getTokenColor(symbol: string, name: string): string
 
-## Data Structure
+// API client creation
+createOneInchAPI(apiKey: string): OneInchAPI
 
-### TokenBalance Interface
+// Backward compatibility functions
+fetchPortfolioData(walletAddress, chainId, chainName?)
+fetchPortfolioDataForChains(walletAddress, chains)
+```
 
+## 📊 **Data Types**
+
+### **TokenBalance**
 ```typescript
 interface TokenBalance {
-  symbol: string;        // Token symbol (e.g., "ETH")
-  name: string;          // Token name (e.g., "Ethereum")
-  address: string;       // Token contract address
-  decimals: number;      // Token decimals
-  logoURI?: string;      // Token logo URL
-  tags?: string[];       // Token tags
-  balance: string;       // Raw balance amount
-  price: number;         // Current token price in USD
-  value: number;         // Total value in USD
-  change24h?: number;    // 24h price change percentage
+  symbol: string;
+  name: string;
+  address: string;
+  decimals: number;
+  logoURI?: string;
+  tags?: string[];
+  balance: string;
+  price: number;
+  value: number;
+  change24h?: number;
+  icon?: string;        // Enriched by service
+  color?: string;       // Enriched by service
 }
 ```
 
-### PortfolioResponse Interface
-
+### **PortfolioResponse**
 ```typescript
 interface PortfolioResponse {
-  tokens: TokenBalance[];    // Array of token balances
-  totalValue: number;        // Total portfolio value in USD
-  chainId: number;          // Blockchain chain ID
-  walletAddress: string;    // Wallet address
+  tokens: TokenBalance[];
+  totalValue: number;
+  chainId: number;
+  walletAddress: string;
+  chainName?: string;
 }
 ```
 
-## Features
+### **AllChainsPortfolioResponse**
+```typescript
+interface AllChainsPortfolioResponse {
+  walletAddress: string;
+  totalValue: number;
+  chains: PortfolioResponse[];
+  summary: {
+    totalTokens: number;
+    chainsWithTokens: number;
+    highestValueChain: {
+      chainId: number;
+      chainName: string;
+      value: number;
+    };
+  };
+}
+```
 
-### Token Icons
+## 🎨 **Token Enrichment**
 
-The service automatically maps common tokens to emoji icons:
-
-- ETH → 🔵
-- BTC → 🟡
-- USDC → 💙
-- MATIC → 🟣
-- LINK → 🔗
-- UNI → 🦄
+### **Icon Mapping**
+The service automatically maps token symbols to emoji icons:
+- `ETH` → 🔵
+- `USDC` → 💙
+- `MATIC` → 🟣
+- `LINK` → 🔗
 - And many more...
 
-### Token Colors
+### **Color Mapping**
+Token colors are mapped to Tailwind CSS gradients:
+- `ETH` → `from-blue-400 to-blue-600`
+- `USDC` → `from-blue-400 to-cyan-500`
+- `MATIC` → `from-purple-400 to-purple-600`
 
-Each token gets a unique gradient color based on its symbol:
+## 🔄 **Usage Examples**
 
-- ETH → `from-blue-400 to-blue-600`
-- BTC → `from-yellow-400 to-orange-500`
-- USDC → `from-blue-400 to-cyan-500`
-- And many more...
+### **Backend API Routes**
+```typescript
+// Single chain
+import { fetchPortfolioData } from '@/lib/1inch/api';
+const data = await fetchPortfolioData(address, chainId);
 
-### Data Filtering
+// All chains
+import { fetchPortfolioDataForChains } from '@/lib/1inch/api';
+const data = await fetchPortfolioDataForChains(address, chains);
+```
 
-The service automatically:
-- Filters out tokens with zero balance
-- Sorts tokens by value (highest first)
-- Validates response data
-- Handles missing or invalid data gracefully
+### **Frontend Components**
+```typescript
+// Using the backend API
+import { fetchAllChainsPortfolioData } from '@/lib/api/portfolioAll';
+const portfolioData = await fetchAllChainsPortfolioData(walletAddress);
+```
 
-## Rate Limits
+## 🛡️ **Error Handling**
 
-The 1inch API has rate limits:
-- Free tier: 100 requests per minute
-- Paid tiers: Higher limits available
+### **Error Types**
+- **`API_ERROR`** - 1inch API error
+- **`NETWORK_ERROR`** - Network connectivity issue
+- **`REQUEST_ERROR`** - Request configuration error
+- **`VALIDATION_ERROR`** - Input validation error
 
-## Security
+### **Error Response**
+```typescript
+interface PortfolioError {
+  error: string;
+  message: string;
+  status?: number;
+}
+```
 
-- API key is stored in environment variables
-- No sensitive data is logged
-- Input validation prevents injection attacks
-- Timeout protection (10 seconds)
+## 🔧 **Configuration**
 
-## Troubleshooting
-
-### Common Issues
-
-1. **"1inch API key not configured"**
-   - Make sure `NEXT_PUBLIC_1INCH_API_KEY` is set in `.env.local`
-
-2. **"Invalid wallet address format"**
-   - Ensure wallet address is a valid Ethereum address (0x...)
-
-3. **"Network error: Unable to reach 1inch API"**
-   - Check your internet connection
-   - Verify the API endpoint is accessible
-
-4. **"API error: 401 - Unauthorized"**
-   - Check if your API key is valid
-   - Ensure you have sufficient credits/quota
-
-### Debug Mode
-
-Enable debug logging by adding to your environment:
-
+### **Environment Variables**
 ```env
-NEXT_PUBLIC_DEBUG=1
+# Backend (.env.local)
+INCH_API_KEY=your_1inch_api_key_here
 ```
 
-This will log API requests and responses to the console.
+### **API Endpoints**
+- **Base URL**: `https://api.1inch.dev`
+- **Portfolio Endpoint**: `/portfolio/portfolio/v4/overview/erc20/current_value`
+- **Timeout**: 10 seconds (configurable)
 
-## File Structure
+## 🚀 **Performance Features**
 
+### **Parallel Processing**
+- Multiple chain requests made simultaneously
+- `Promise.allSettled()` for graceful failure handling
+- Individual chain failures don't break entire request
+
+### **Caching Strategy**
+- Backend can implement response caching
+- Frontend can cache processed data
+- Configurable cache invalidation
+
+## 🔮 **Future Enhancements**
+
+### **Planned Features**
+- **Swap Integration**: Token swapping via 1inch
+- **Token Lists**: Curated token lists
+- **Price Feeds**: Real-time price updates
+- **Analytics**: Portfolio analytics and insights
+- **Notifications**: Price alerts and updates
+
+### **API Extensions**
+- **Rate Limiting**: Smart rate limiting
+- **Retry Logic**: Exponential backoff
+- **WebSocket**: Real-time updates
+- **Batch Requests**: Optimized bulk operations
+
+## 🧪 **Testing**
+
+### **Unit Tests**
+```bash
+# Test the centralized API service
+npm test lib/1inch/api.test.ts
 ```
-1inch/
-├── README.md           # This documentation
-├── portfolio.ts        # Portfolio API service
-├── swap.ts            # Swap API service (existing)
-├── tokens.ts          # Token metadata service (existing)
-├── types.ts           # Shared types (existing)
-└── utils.ts           # Utility functions (existing)
-``` 
+
+### **Integration Tests**
+```bash
+# Test API endpoints
+npm test pages/api/portfolio/
+```
+
+## 📈 **Monitoring**
+
+### **Logging**
+- Request/response logging
+- Error tracking
+- Performance metrics
+- Rate limit monitoring
+
+### **Metrics**
+- API response times
+- Success/failure rates
+- Token enrichment statistics
+- Chain-specific metrics
+
+## 🔗 **Related Files**
+
+- **Backend Routes**: `pages/api/portfolio/`
+- **Frontend Services**: `lib/api/portfolioAll.ts`
+- **Components**: `components/profile/InventoryTab.tsx`
+- **Configuration**: `config/wagmiConfig.ts`
+
+---
+
+This centralized approach ensures consistent, maintainable, and secure 1inch API integration across the entire HashHunt application. 
