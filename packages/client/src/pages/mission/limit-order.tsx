@@ -12,6 +12,7 @@ import {
   WalletConnection,
   OrderPreview,
   ActiveOrders,
+  ChartPrice,
   type Token,
   type LimitOrder,
 } from '@/components/mission';
@@ -35,6 +36,7 @@ export default function LimitOrderMissionPage() {
   const [amount, setAmount] = React.useState<string>('');
   const [price, setPrice] = React.useState<string>('');
   const [expiration, setExpiration] = React.useState<string>('1h');
+  const [chartPeriod, setChartPeriod] = React.useState<string>('24H');
   
   // UI state
   const [showPreview, setShowPreview] = React.useState(false);
@@ -172,13 +174,13 @@ export default function LimitOrderMissionPage() {
           </div>
 
           {/* Main Content Container */}
-          <div className="relative z-20 w-full max-w-lg mx-4 flex flex-col items-center space-y-6">
+          <div className="relative z-20 w-full max-w-7xl mx-4">
             {/* Back Button */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: 'easeOut' }}
-              className="self-start mb-2"
+              className="mb-4"
             >
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -195,167 +197,196 @@ export default function LimitOrderMissionPage() {
               initial={{ opacity: 0, y: -30, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.6, ease: 'easeOut' }}
-              className="w-full"
+              className="mb-6"
             >
               <div className="bg-black/30 backdrop-blur-lg border border-white/20 rounded-2xl px-6 py-3">
-                <h1 className="text-2xl font-bold text-white text-center">
+                <h1 className="text-3xl font-bold text-white text-center">
                   📊 Limit Order Mission
                 </h1>
-                <p className="text-gray-300 text-sm text-center mt-1">
+                <p className="text-gray-300 text-lg text-center mt-1">
                   Master the art of strategic trading with limit orders
                 </p>
               </div>
             </motion.div>
 
-            {/* Limit Order Panel */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 50 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
-              className="w-full"
+            {/* Mission Progress */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.0 }}
+              className="mb-8 p-4 bg-black/20 border border-amber-300/30 rounded-xl"
             >
-              <div className="relative bg-gradient-to-br from-emerald-900/90 via-teal-900/90 to-cyan-900/90 backdrop-blur-xl border-2 border-white/20 rounded-3xl p-6 shadow-2xl">
-                {/* Panel Header */}
-                <div className="text-center mb-6">
-                  <h2 className="text-2xl font-bold text-white mb-2">
-                    ⚡ LIMIT ORDER ⚡
-                  </h2>
-                  <p className="text-gray-300 text-sm">Set your price, set your strategy</p>
-                </div>
-
-
-
-
-
-                                                  {/* From Token */}
-                 <TokenSelector
-                   label="From"
-                   selectedToken={fromToken}
-                   onTokenChange={setFromToken}
-                   availableTokens={availableTokens}
-                   disabled={!isConnected}
-                 />
-
-                 {/* Amount Input */}
-                 <AmountInput
-                   label="Amount"
-                   value={amount}
-                   onChange={setAmount}
-                   placeholder="0.0"
-                   maxValue={fromToken.balance}
-                   onMaxClick={handleMaxAmount}
-                   disabled={!isConnected}
-                 />
-
-                 {/* Swap Direction Button */}
-                 <div className="flex justify-center mb-4">
-                   <motion.button
-                     whileHover={{ scale: 1.1, rotate: 180 }}
-                     whileTap={{ scale: 0.9 }}
-                     onClick={handleSwapTokens}
-                     className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white text-xl shadow-lg border-2 border-white/20"
-                   >
-                     ⇅
-                   </motion.button>
-                 </div>
-
-                 {/* To Token */}
-                 <TokenSelector
-                   label="To"
-                   selectedToken={toToken}
-                   onTokenChange={setToToken}
-                   availableTokens={availableTokens}
-                   disabled={!isConnected}
-                 />
-
-                 {/* Price Input */}
-                 <AmountInput
-                   label={`Limit Price (${toToken.symbol}/${fromToken.symbol})`}
-                   value={price}
-                   onChange={setPrice}
-                   placeholder={getCurrentPrice()}
-                   onMaxClick={handleMarketPrice}
-                   disabled={!isConnected}
-                 />
-
-                 {/* Current Price Display */}
-                 <div className="mt-2 text-right text-xs text-gray-400">
-                   Current Price: {getCurrentPrice()} {toToken.symbol}/{fromToken.symbol}
-                 </div>
-
-                 {/* Expiration Selector */}
-                 <ExpirationSelector
-                   selectedExpiration={expiration}
-                   onExpirationChange={setExpiration}
-                   disabled={!isConnected}
-                 />
-
-                {/* Order Preview */}
-                                 <OrderPreview
-                   isVisible={showPreview}
-                   fromToken={fromToken}
-                   toToken={toToken}
-                   amount={amount}
-                   price={price}
-                   expiration={expiration}
-                   orderType="buy"
-                   onConfirm={handleSubmitOrder}
-                   onCancel={() => setShowPreview(false)}
-                   isSubmitting={isSubmitting}
-                 />
-
-                {/* Action Button */}
-                {!showPreview && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
-                    className="mt-6"
-                  >
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handlePreview}
-                      disabled={!isConnected || !amount || !price || parseFloat(amount) <= 0 || parseFloat(price) <= 0}
-                      className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:from-gray-500 disabled:to-gray-600 text-white font-bold rounded-xl transition-all duration-300 uppercase tracking-wide"
-                    >
-                      🔮 Preview Order
-                    </motion.button>
-                  </motion.div>
-                )}
-
-                {/* Active Orders */}
-                <ActiveOrders
-                  orders={activeOrders}
-                  onCancelOrder={handleCancelOrder}
-                />
-
-                {/* Mission Progress */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.0 }}
-                  className="mt-6 p-4 bg-black/20 border border-amber-300/30 rounded-xl"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-amber-300 text-sm font-bold">🎯 Limit Order Mission Progress</span>
-                    <span className="text-amber-300 text-sm">{ordersCompleted}/2 Orders</span>
-                  </div>
-                  <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
-                    <motion.div
-                      animate={{ width: `${(ordersCompleted / 2) * 100}%` }}
-                      transition={{ duration: 1.5, ease: 'easeOut' }}
-                      className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
-                      style={{
-                        boxShadow: '0 0 10px rgba(251, 191, 36, 0.5)',
-                      }}
-                    />
-                  </div>
-                  <p className="text-gray-300 text-xs mt-2">
-                    Complete {2 - ordersCompleted} more limit orders to finish this mission and earn 1000 XP!
-                  </p>
-                </motion.div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-amber-300 text-sm font-bold">🎯 Mission Progress</span>
+                <span className="text-amber-300 text-sm">{ordersCompleted}/2</span>
               </div>
+              <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
+                <motion.div
+                  animate={{ width: `${(ordersCompleted / 2) * 100}%` }}
+                  transition={{ duration: 1.5, ease: 'easeOut' }}
+                  className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
+                  style={{
+                    boxShadow: '0 0 10px rgba(251, 191, 36, 0.5)',
+                  }}
+                />
+              </div>
+              <p className="text-gray-300 text-xs mt-2">
+                Complete {2 - ordersCompleted} more orders to finish!
+              </p>
+            </motion.div>
+
+            {/* Main Layout - Chart and Form Side by Side */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+              {/* Left Column - Large Chart */}
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                className="xl:col-span-2"
+              >
+                <div className="bg-gradient-to-br from-emerald-900/90 via-teal-900/90 to-cyan-900/90 backdrop-blur-xl border-2 border-white/20 rounded-3xl p-8 shadow-2xl">
+                  <div className="text-center mb-6">
+                    <h2 className="text-2xl font-bold text-white mb-2">
+                      📈 Price Chart
+                    </h2>
+                    <p className="text-gray-300 text-sm">{fromToken.symbol}/{toToken.symbol} • {chartPeriod} Period</p>
+                  </div>
+                  
+                  <ChartPrice
+                    fromToken={fromToken}
+                    toToken={toToken}
+                    period={chartPeriod}
+                    chainId={1}
+                    className="w-full"
+                    onPeriodChange={setChartPeriod}
+                  />
+                </div>
+              </motion.div>
+
+              {/* Right Column - Limit Order Form */}
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.4 }}
+                className="xl:col-span-1"
+              >
+                <div className="sticky top-8">
+                  <div className="bg-gradient-to-br from-emerald-900/90 via-teal-900/90 to-cyan-900/90 backdrop-blur-xl border-2 border-white/20 rounded-3xl p-6 shadow-2xl">
+                    {/* Panel Header */}
+                    <div className="text-center mb-6">
+                      <h2 className="text-xl font-bold text-white mb-2">
+                        ⚡ LIMIT ORDER ⚡
+                      </h2>
+                      <p className="text-gray-300 text-sm">Set your price, set your strategy</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* From Token */}
+                      <TokenSelector
+                        label="From"
+                        selectedToken={fromToken}
+                        onTokenChange={setFromToken}
+                        availableTokens={availableTokens}
+                        disabled={!isConnected}
+                      />
+
+                      {/* Amount Input */}
+                      <AmountInput
+                        label="Amount"
+                        value={amount}
+                        onChange={setAmount}
+                        placeholder="0.0"
+                        maxValue={fromToken.balance}
+                        onMaxClick={handleMaxAmount}
+                        disabled={!isConnected}
+                      />
+
+                      {/* Swap Direction Button */}
+                      <div className="flex justify-center">
+                        <motion.button
+                          whileHover={{ scale: 1.1, rotate: 180 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={handleSwapTokens}
+                          className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white text-lg shadow-lg border-2 border-white/20"
+                        >
+                          ⇅
+                        </motion.button>
+                      </div>
+
+                      {/* To Token */}
+                      <TokenSelector
+                        label="To"
+                        selectedToken={toToken}
+                        onTokenChange={setToToken}
+                        availableTokens={availableTokens}
+                        disabled={!isConnected}
+                      />
+
+                      {/* Price Input */}
+                      <AmountInput
+                        label={`Limit Price (${toToken.symbol}/${fromToken.symbol})`}
+                        value={price}
+                        onChange={setPrice}
+                        placeholder={getCurrentPrice()}
+                        onMaxClick={handleMarketPrice}
+                        disabled={!isConnected}
+                      />
+
+                      {/* Current Price Display */}
+                      <div className="text-right text-xs text-gray-400">
+                        Current Price: {getCurrentPrice()} {toToken.symbol}/{fromToken.symbol}
+                      </div>
+
+                      {/* Expiration Selector */}
+                      <ExpirationSelector
+                        selectedExpiration={expiration}
+                        onExpirationChange={setExpiration}
+                        disabled={!isConnected}
+                      />
+
+                      {/* Action Button */}
+                      {!showPreview && (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handlePreview}
+                          disabled={!isConnected || !amount || !price || parseFloat(amount) <= 0 || parseFloat(price) <= 0}
+                          className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:from-gray-500 disabled:to-gray-600 text-white font-bold rounded-xl transition-all duration-300 uppercase tracking-wide text-sm"
+                        >
+                          🔮 Preview Order
+                        </motion.button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Order Preview Modal */}
+            <OrderPreview
+              isVisible={showPreview}
+              fromToken={fromToken}
+              toToken={toToken}
+              amount={amount}
+              price={price}
+              expiration={expiration}
+              orderType="buy"
+              onConfirm={handleSubmitOrder}
+              onCancel={() => setShowPreview(false)}
+              isSubmitting={isSubmitting}
+            />
+
+            {/* Active Orders */}
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: 'easeOut', delay: 0.6 }}
+              className="mt-8"
+            >
+              <ActiveOrders
+                orders={activeOrders}
+                onCancelOrder={handleCancelOrder}
+              />
             </motion.div>
           </div>
 
