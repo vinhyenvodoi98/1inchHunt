@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { fetchPortfolioDataForChains } from '@/lib/1inch/api';
+import { fetchPortfolioDataForChains } from '@/lib/1inch/factory';
 import { chains } from '@/config/wagmiConfig';
 
 export default async function handler(

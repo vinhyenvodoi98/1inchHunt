@@ -1,117 +1,129 @@
-import { SwapAPIError } from './types';
-
 /**
- * Get 1inch API key from environment variables
- * @throws SwapAPIError if API key is not set
+ * Gets token icon/emoji based on symbol or name
  */
-export function getApiKey(): string {
-  const apiKey = process.env.NEXT_PUBLIC_1INCH_API_KEY;
-  if (!apiKey) {
-    throw new SwapAPIError('1INCH_API_KEY environment variable is not set');
-  }
-  return apiKey;
-}
+export function getTokenIcon(symbol: string, name: string): string {
+  const symbolLower = symbol.toLowerCase();
+  const nameLower = name.toLowerCase();
 
-/**
- * Validate Ethereum address format
- * @param address - Address to validate
- * @returns True if valid Ethereum address
- */
-export function isValidAddress(address: string): boolean {
-  return /^0x[a-fA-F0-9]{40}$/.test(address);
-}
-
-/**
- * Get common request headers for 1inch API
- * @returns Headers object with authorization and content type
- */
-export function getApiHeaders(): Record<string, string> {
-  const apiKey = getApiKey();
-  return {
-    'Authorization': `Bearer ${apiKey}`,
-    'Accept': 'application/json',
-    'Content-Type': 'application/json'
+  const tokenIcons: { [key: string]: string } = {
+    'eth': '🔵',
+    'ethereum': '🔵',
+    'btc': '🟡',
+    'bitcoin': '🟡',
+    'usdc': '💙',
+    'usdt': '💚',
+    'dai': '🟡',
+    'matic': '🟣',
+    'polygon': '🟣',
+    'link': '🔗',
+    'chainlink': '🔗',
+    'uni': '🦄',
+    'uniswap': '🦄',
+    'aave': '🟢',
+    'comp': '🔵',
+    'compound': '🔵',
+    'sushi': '🍣',
+    'sushiswap': '🍣',
+    'crv': '🟠',
+    'curve': '🟠',
+    'bal': '🔵',
+    'balancer': '🔵',
+    'yfi': '🟡',
+    'yearn': '🟡',
+    'snx': '🟣',
+    'synthetix': '🟣',
+    'ren': '🟢',
+    'renvm': '🟢',
+    '1inch': '🔵',
+    'wbtc': '🟡',
+    'weth': '🔵',
   };
+
+  if (tokenIcons[symbolLower]) {
+    return tokenIcons[symbolLower];
+  }
+
+  if (tokenIcons[nameLower]) {
+    return tokenIcons[nameLower];
+  }
+
+  if (nameLower.includes('usd') || nameLower.includes('stable')) {
+    return '💵';
+  }
+  if (nameLower.includes('wrapped') || nameLower.includes('w')) {
+    return '📦';
+  }
+  if (nameLower.includes('governance') || nameLower.includes('gov')) {
+    return '🗳️';
+  }
+  if (nameLower.includes('liquidity') || nameLower.includes('lp')) {
+    return '💧';
+  }
+
+  return '🪙';
 }
 
 /**
- * Validate swap parameters
- * @param fromTokenAddress - Source token address
- * @param toTokenAddress - Destination token address
- * @param fromAddress - User wallet address
- * @param amount - Amount to swap
- * @param slippage - Slippage tolerance
- * @throws SwapAPIError if any parameter is invalid
+ * Gets token color gradient based on symbol or name
  */
-export function validateSwapParams(
-  fromTokenAddress: string,
-  toTokenAddress: string,
-  fromAddress: string,
-  amount: string,
-  slippage: number
-): void {
-  if (!isValidAddress(fromTokenAddress)) {
-    throw new SwapAPIError('Invalid fromTokenAddress format');
-  }
-  if (!isValidAddress(toTokenAddress)) {
-    throw new SwapAPIError('Invalid toTokenAddress format');
-  }
-  if (!isValidAddress(fromAddress)) {
-    throw new SwapAPIError('Invalid fromAddress format');
+export function getTokenColor(symbol: string, name: string): string {
+  const symbolLower = symbol.toLowerCase();
+  const nameLower = name.toLowerCase();
+
+  const tokenColors: { [key: string]: string } = {
+    'eth': 'from-blue-400 to-blue-600',
+    'ethereum': 'from-blue-400 to-blue-600',
+    'btc': 'from-yellow-400 to-orange-500',
+    'bitcoin': 'from-yellow-400 to-orange-500',
+    'usdc': 'from-blue-400 to-cyan-500',
+    'usdt': 'from-green-400 to-green-600',
+    'dai': 'from-yellow-400 to-yellow-600',
+    'matic': 'from-purple-400 to-purple-600',
+    'polygon': 'from-purple-400 to-purple-600',
+    'link': 'from-blue-500 to-blue-700',
+    'chainlink': 'from-blue-500 to-blue-700',
+    'uni': 'from-pink-400 to-purple-600',
+    'uniswap': 'from-pink-400 to-purple-600',
+    'aave': 'from-green-400 to-green-600',
+    'comp': 'from-blue-400 to-blue-600',
+    'compound': 'from-blue-400 to-blue-600',
+    'sushi': 'from-pink-400 to-red-500',
+    'sushiswap': 'from-pink-400 to-red-500',
+    'crv': 'from-orange-400 to-orange-600',
+    'curve': 'from-orange-400 to-orange-600',
+    'bal': 'from-blue-400 to-blue-600',
+    'balancer': 'from-blue-400 to-blue-600',
+    'yfi': 'from-yellow-400 to-yellow-600',
+    'yearn': 'from-yellow-400 to-yellow-600',
+    'snx': 'from-purple-400 to-purple-600',
+    'synthetix': 'from-purple-400 to-purple-600',
+    'ren': 'from-green-400 to-green-600',
+    'renvm': 'from-green-400 to-green-600',
+    '1inch': 'from-blue-400 to-blue-600',
+    'wbtc': 'from-yellow-400 to-orange-500',
+    'weth': 'from-blue-400 to-blue-600',
+  };
+
+  if (tokenColors[symbolLower]) {
+    return tokenColors[symbolLower];
   }
 
-  // Validate amount
-  if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-    throw new SwapAPIError('Invalid amount: must be a positive number');
+  if (tokenColors[nameLower]) {
+    return tokenColors[nameLower];
   }
 
-  // Validate slippage
-  if (slippage < 0 || slippage > 50) {
-    throw new SwapAPIError('Invalid slippage: must be between 0 and 50');
+  if (nameLower.includes('usd') || nameLower.includes('stable')) {
+    return 'from-green-400 to-green-600';
   }
-}
-
-/**
- * Handle axios errors and convert to SwapAPIError
- * @param error - Axios error or unknown error
- * @param context - Context string for error message
- * @throws SwapAPIError with appropriate message and status code
- */
-export function handleApiError(error: any, context: string): never {
-  if (error?.isAxiosError) {
-    const statusCode = error.response?.status;
-    const errorMessage = error.response?.data?.description || 
-                        error.response?.data?.message || 
-                        error.message;
-
-    // Handle specific API error codes
-    switch (statusCode) {
-      case 400:
-        throw new SwapAPIError(`Bad Request: ${errorMessage}`, statusCode, error.response?.data);
-      case 401:
-        throw new SwapAPIError('Unauthorized: Invalid API key', statusCode);
-      case 404:
-        throw new SwapAPIError('Not found', statusCode);
-      case 429:
-        throw new SwapAPIError('Rate limit exceeded. Please try again later.', statusCode);
-      case 500:
-        throw new SwapAPIError('1inch API server error. Please try again later.', statusCode);
-      default:
-        throw new SwapAPIError(
-          `1inch API error (${context}): ${errorMessage}`,
-          statusCode,
-          error.response?.data
-        );
-    }
+  if (nameLower.includes('wrapped') || nameLower.includes('w')) {
+    return 'from-gray-400 to-gray-600';
+  }
+  if (nameLower.includes('governance') || nameLower.includes('gov')) {
+    return 'from-purple-400 to-purple-600';
+  }
+  if (nameLower.includes('liquidity') || nameLower.includes('lp')) {
+    return 'from-blue-400 to-cyan-500';
   }
 
-  // Re-throw SwapAPIError instances
-  if (error instanceof SwapAPIError) {
-    throw error;
-  }
-
-  // Handle other errors
-  throw new SwapAPIError(
-    `Unexpected error (${context}): ${error instanceof Error ? error.message : 'Unknown error'}`
-  );
+  return 'from-gray-400 to-gray-600';
 }

@@ -7,7 +7,7 @@ import {
   PortfolioResponse,
   TokenBalance, 
   PortfolioError 
-} from '@/lib/1inch/api';
+} from '@/lib/api/portfolioAll';
 
 export const InventoryTab: React.FC = () => {
   const { address } = useAccount();

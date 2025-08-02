@@ -1,13 +1,12 @@
 import axios from 'axios';
 import { 
-  TokenBalance, 
-  PortfolioResponse, 
-  AllChainsPortfolioResponse, 
+  TransactionEvent, 
+  TransactionHistoryResponse, 
   PortfolioError 
 } from '@/lib/1inch/api';
 
 // Re-export types for frontend use
-export type { TokenBalance, PortfolioResponse, AllChainsPortfolioResponse, PortfolioError };
+export type { TransactionEvent, TransactionHistoryResponse, PortfolioError };
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -17,30 +16,48 @@ export interface ApiResponse<T> {
 }
 
 /**
- * Fetches portfolio data from our backend API for all configured chains
- * @param walletAddress - The wallet address to fetch portfolio for
- * @returns Promise<AllChainsPortfolioResponse> - Portfolio data across all chains
+ * Fetches transaction history from our backend API
+ * @param walletAddress - The wallet address to fetch history for
+ * @param chainId - The blockchain chain ID (e.g., 1 for Ethereum, 137 for Polygon)
+ * @param limit - Number of transactions to fetch (default: 20, max: 100)
+ * @param page - Page number for pagination (default: 1)
+ * @returns Promise<TransactionHistoryResponse> - Transaction history data
  */
-export async function fetchAllChainsPortfolioData(
-  walletAddress: string
-): Promise<AllChainsPortfolioResponse> {
+export async function fetchTransactionHistory(
+  walletAddress: string,
+  chainId: number,
+  limit = 20,
+  page = 1
+): Promise<TransactionHistoryResponse> {
   try {
     // Validate inputs
     if (!walletAddress || !walletAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
       throw new Error('Invalid wallet address format');
     }
 
+    if (!chainId || chainId <= 0) {
+      throw new Error('Invalid chain ID');
+    }
+
+    if (limit < 1 || limit > 100) {
+      throw new Error('Limit must be between 1 and 100');
+    }
+
+    if (page < 1) {
+      throw new Error('Page must be greater than 0');
+    }
+
     // Make API request to our backend
-    const response = await axios.get<ApiResponse<AllChainsPortfolioResponse>>(
-      `/api/portfolio/all/${walletAddress}`,
+    const response = await axios.get<ApiResponse<TransactionHistoryResponse>>(
+      `/api/history/${walletAddress}?chainId=${chainId}&limit=${limit}&page=${page}`,
       {
-        timeout: 30000, // 30 second timeout for multiple chain requests
+        timeout: 15000, // 15 second timeout
       }
     );
 
     // Check if the response indicates success
     if (!response.data.success || !response.data.data) {
-      throw new Error(response.data.error || 'Failed to fetch portfolio data');
+      throw new Error(response.data.error || 'Failed to fetch transaction history');
     }
 
     return response.data.data;

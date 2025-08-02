@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { fetchPortfolioData } from '@/lib/1inch/factory';
+import { fetchTransactionHistory } from '@/lib/1inch/factory';
 
 export default async function handler(
   req: NextApiRequest,
@@ -13,6 +13,8 @@ export default async function handler(
   try {
     const { address } = req.query;
     const chainId = parseInt(req.query.chainId as string);
+    const limit = parseInt(req.query.limit as string) || 20;
+    const page = parseInt(req.query.page as string) || 1;
 
     // Validate required parameters
     if (!address || typeof address !== 'string') {
@@ -23,20 +25,22 @@ export default async function handler(
       return res.status(400).json({ error: 'Valid chain ID is required' });
     }
 
-    // Fetch portfolio data using centralized service
-    const portfolioData = await fetchPortfolioData(address, chainId);
-
-    if (!portfolioData) {
-      return res.status(404).json({ 
-        success: false,
-        error: 'No portfolio data found for this wallet and chain' 
-      });
+    // Validate optional parameters
+    if (limit < 1 || limit > 100) {
+      return res.status(400).json({ error: 'Limit must be between 1 and 100' });
     }
+
+    if (page < 1) {
+      return res.status(400).json({ error: 'Page must be greater than 0' });
+    }
+
+    // Fetch transaction history using centralized service
+    const historyData = await fetchTransactionHistory(address, chainId, limit, page);
 
     // Return success response
     res.status(200).json({
       success: true,
-      data: portfolioData,
+      data: historyData,
     });
 
   } catch (error) {

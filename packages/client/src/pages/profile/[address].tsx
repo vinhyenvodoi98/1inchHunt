@@ -6,8 +6,9 @@ import Layout from '@/components/layout/Layout';
 import { InventoryTab } from '@/components/profile/InventoryTab';
 import { QuestsTab } from '@/components/profile/QuestsTab';
 import { AchievementsTab } from '@/components/profile/AchievementsTab';
+import { HistoryTab } from '@/components/profile/HistoryTab';
 
-type TabType = 'inventory' | 'quests' | 'achievements';
+type TabType = 'inventory' | 'quests' | 'achievements' | 'history';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -30,6 +31,7 @@ export default function ProfilePage() {
     { id: 'inventory', label: '🧳 Inventory', icon: '🎒' },
     { id: 'quests', label: '🗺️ Quests', icon: '⚔️' },
     { id: 'achievements', label: '📜 Achievements', icon: '🏆' },
+    { id: 'history', label: '📜 History', icon: '📋' },
   ];
 
   return (
@@ -170,6 +172,7 @@ export default function ProfilePage() {
                   {activeTab === 'inventory' && <InventoryTab />}
                   {activeTab === 'quests' && <QuestsTab />}
                   {activeTab === 'achievements' && <AchievementsTab />}
+                  {activeTab === 'history' && <HistoryTab />}
                 </motion.div>
               </AnimatePresence>
             </div>

@@ -1,77 +1,81 @@
-// 1inch API Response Types
-export interface OneInchSwapResponse {
-  fromToken: {
-    symbol: string;
-    name: string;
-    decimals: number;
-    address: string;
-    logoURI: string;
-  };
-  toToken: {
-    symbol: string;
-    name: string;
-    decimals: number;
-    address: string;
-    logoURI: string;
-  };
-  toAmount: string;
-  fromAmount: string;
-  protocols: any[];
-  tx: {
-    from: string;
-    to: string;
-    data: string;
-    value: string;
-    gas: string;
-    gasPrice: string;
-  };
-}
-
-// Token metadata types
-export interface TokenMetadata {
+// Types for 1inch API responses
+export interface TokenBalance {
   symbol: string;
   name: string;
   address: string;
-  logoURI: string;
   decimals: number;
+  logoURI?: string;
+  tags?: string[];
+  balance: string;
+  price: number;
+  value: number;
+  change24h?: number;
+  icon?: string;
+  color?: string;
 }
 
-export interface OneInchTokensResponse {
-  [address: string]: {
-    symbol: string;
-    name: string;
-    address: string;
-    logoURI: string;
-    decimals: number;
+export interface PortfolioResponse {
+  tokens: TokenBalance[];
+  totalValue: number;
+  chainId: number;
+  walletAddress: string;
+  chainName?: string;
+}
+
+export interface AllChainsPortfolioResponse {
+  walletAddress: string;
+  totalValue: number;
+  chains: PortfolioResponse[];
+  summary: {
+    totalTokens: number;
+    chainsWithTokens: number;
+    highestValueChain: {
+      chainId: number;
+      chainName: string;
+      value: number;
+    };
   };
 }
 
-// Viem-compatible transaction data
-export interface SwapTransactionData {
-  to: `0x${string}`;
-  data: `0x${string}`;
-  value: bigint;
-  gas: bigint;
-  gasPrice: bigint;
+export interface PortfolioError {
+  error: string;
+  message: string;
+  status?: number;
 }
 
-// Swap parameters interface
-export interface SwapParams {
-  fromTokenAddress: string;
-  toTokenAddress: string;
-  amount: string;
-  fromAddress: string;
-  slippage: number; // Percentage (e.g., 1 for 1%)
+// Types for transaction history
+export interface TransactionEvent {
+  id: string;
+  type: string;
+  timestamp: number;
+  blockNumber: number;
+  transactionHash: string;
+  from: string;
+  to: string;
+  value: string;
+  tokenAddress?: string;
+  tokenSymbol?: string;
+  tokenName?: string;
+  gasUsed?: string;
+  gasPrice?: string;
+  status: 'success' | 'failed' | 'pending';
+  chainId: number;
+  icon?: string;
+  color?: string;
+  direction?: string;
+  rating?: string;
+  // Additional transaction details
+  blockTimeSec?: number;
+  nonce?: number;
+  orderInBlock?: number;
+  feeInSmallestNative?: string;
+  tokenActions?: any[];
 }
 
-// Error types
-export class SwapAPIError extends Error {
-  constructor(
-    message: string,
-    public statusCode?: number,
-    public response?: any
-  ) {
-    super(message);
-    this.name = 'SwapAPIError';
-  }
+export interface TransactionHistoryResponse {
+  events: TransactionEvent[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
 } 
