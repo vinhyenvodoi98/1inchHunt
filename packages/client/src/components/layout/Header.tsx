@@ -139,23 +139,6 @@ export default function Header() {
                 </div>
               </div>
 
-              {/* Center Navigation */}
-              <div className="hidden md:flex items-center space-x-2">
-                {['Home', 'Quests', 'Inventory', 'Leaderboard'].map((item, index) => (
-                  <motion.button
-                    key={item}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.1 + index * 0.1 }}
-                    className="px-4 py-2 text-white hover:text-purple-300 rounded-lg hover:bg-white/10 transition-all duration-300 font-medium"
-                  >
-                    {item}
-                  </motion.button>
-                ))}
-              </div>
-
               {/* Right Side - Health/Mana + Actions */}
               <div className="flex items-center space-x-4">
                 {/* Health and Mana - Hidden on small screens */}
