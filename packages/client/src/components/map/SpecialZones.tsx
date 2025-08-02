@@ -67,6 +67,8 @@ export const SpecialZones: React.FC<SpecialZonesProps> = ({
                   transition={{ duration: 2, repeat: Infinity }}
                   className={`absolute inset-0 rounded-full blur-sm ${
                     zone.type === 'swap' ? 'bg-blue-400' :
+                    zone.type === 'advanced-swap' ? 'bg-purple-400' :
+                    zone.type === 'limit-order' ? 'bg-emerald-400' :
                     zone.type === 'boss' ? 'bg-red-400' :
                     'bg-yellow-400'
                   }`}

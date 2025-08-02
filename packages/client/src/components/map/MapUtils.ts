@@ -6,7 +6,7 @@ export interface Position {
 export interface SpecialZone {
   x: number;
   y: number;
-  type: 'swap' | 'boss' | 'chest';
+  type: 'swap' | 'advanced-swap' | 'limit-order' | 'boss' | 'chest';
   icon: string;
   name: string;
   description: string;
@@ -190,42 +190,64 @@ export const createTerrainMap = (): string[][] => {
 export const terrainMap = createTerrainMap();
 
 export const specialZones: SpecialZone[] = [
-  // Major Towns (Trading Hubs)
+  // Basic Swap Missions (Beginner)
   {
     x: 15,
     y: 35,
     type: 'swap',
-    icon: '🏘️',
-    name: 'Crypto Capital',
-    description: 'The largest trading city in the realm, center of all DeFi activity',
-    action: 'Press SPACE to enter the capital'
+    icon: '🔄',
+    name: 'Basic Swap Academy',
+    description: 'Learn the fundamentals of token swapping in this beginner-friendly zone',
+    action: 'Press SPACE to start basic swap mission'
   },
   {
     x: 45,
     y: 15,
     type: 'swap',
-    icon: '🏘️',
-    name: 'Northern Outpost',
-    description: 'A frontier trading post near the mountain ranges',
-    action: 'Press SPACE to explore the outpost'
+    icon: '🔄',
+    name: 'Swap Training Grounds',
+    description: 'Practice simple token exchanges with guided tutorials',
+    action: 'Press SPACE to enter training grounds'
   },
+  
+  // Advanced Swap Missions (Intermediate)
   {
     x: 35,
     y: 60,
-    type: 'swap',
-    icon: '🏘️',
-    name: 'Forest Haven',
-    description: 'A mystical town hidden within the Great Forest',
-    action: 'Press SPACE to discover the haven'
+    type: 'advanced-swap',
+    icon: '🚀',
+    name: 'Advanced Trading Hub',
+    description: 'Master complex routing and optimization strategies',
+    action: 'Press SPACE to access advanced swap mission'
   },
   {
     x: 65,
     y: 35,
-    type: 'swap',
-    icon: '🏘️',
-    name: 'Eastern Gateway',
-    description: 'A mountain village connecting eastern and western lands',
-    action: 'Press SPACE to visit the gateway'
+    type: 'advanced-swap',
+    icon: '🚀',
+    name: 'Multi-Route Exchange',
+    description: 'Advanced trading with multiple route optimization',
+    action: 'Press SPACE to explore multi-route trading'
+  },
+  
+  // Limit Order Missions (Advanced)
+  {
+    x: 25,
+    y: 25,
+    type: 'limit-order',
+    icon: '📊',
+    name: 'Limit Order Tower',
+    description: 'Strategic trading with limit orders and price management',
+    action: 'Press SPACE to enter limit order mission'
+  },
+  {
+    x: 55,
+    y: 55,
+    type: 'limit-order',
+    icon: '📊',
+    name: 'Strategic Trading Center',
+    description: 'Advanced limit order strategies and market analysis',
+    action: 'Press SPACE to access strategic trading'
   },
   
   // Castles and Strongholds

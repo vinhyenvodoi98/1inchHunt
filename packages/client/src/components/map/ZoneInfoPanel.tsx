@@ -27,6 +27,8 @@ export const ZoneInfoPanel: React.FC<ZoneInfoPanelProps> = ({
                 <h3 className="text-xl font-bold text-white">{currentZone.name}</h3>
                 <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                   currentZone.type === 'swap' ? 'bg-blue-500/20 text-blue-300' :
+                  currentZone.type === 'advanced-swap' ? 'bg-purple-500/20 text-purple-300' :
+                  currentZone.type === 'limit-order' ? 'bg-emerald-500/20 text-emerald-300' :
                   currentZone.type === 'boss' ? 'bg-red-500/20 text-red-300' :
                   'bg-yellow-500/20 text-yellow-300'
                 }`}>

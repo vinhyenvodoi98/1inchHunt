@@ -90,7 +90,13 @@ export const MapContainer: React.FC = () => {
     if (currentZone) {
       switch (currentZone.type) {
         case 'swap':
-          router.push('/mission');
+          router.push('/mission/swap');
+          break;
+        case 'advanced-swap':
+          router.push('/mission/advanced-swap');
+          break;
+        case 'limit-order':
+          router.push('/mission/limit-order');
           break;
         case 'boss':
           alert(`You challenged the ${currentZone.name}! Battle system coming soon...`);

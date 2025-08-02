@@ -80,7 +80,7 @@ export default function MissionCard({
 
   const handleCardClick = () => {
     if (status === 'in_progress' || status === 'pending') {
-      router.push('/mission');
+      router.push('/mission/swap');
     }
   };
 

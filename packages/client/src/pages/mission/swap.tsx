@@ -21,7 +21,7 @@ const availableTokens: Token[] = [
   { symbol: 'UNI', name: 'Uniswap', icon: '🦄', balance: 45.2, decimals: 18 },
 ];
 
-export default function MissionPage() {
+export default function SwapMissionPage() {
   const router = useRouter();
   const [fromToken, setFromToken] = React.useState<Token>(availableTokens[0]);
   const [toToken, setToToken] = React.useState<Token>(availableTokens[1]);
@@ -136,7 +136,7 @@ export default function MissionPage() {
                   boxShadow: '0 0 30px rgba(139, 92, 246, 0.6), 0 8px 25px rgba(0, 0, 0, 0.4)',
                 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => router.back()}
+                onClick={() => router.push('/map')}
                 className="group relative overflow-hidden px-4 py-2 bg-black/40 backdrop-blur-xl border border-white/20 rounded-full text-white font-medium shadow-lg hover:border-purple-400/50 transition-all duration-300 transform-gpu"
                 style={{
                   boxShadow: '0 0 15px rgba(139, 92, 246, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2)',
@@ -175,19 +175,6 @@ export default function MissionPage() {
                   style={{ borderRadius: 'inherit' }}
                 />
               </motion.button>
-              
-              {/* Floating tooltip on hover */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                whileHover={{ opacity: 1, scale: 1, y: 0 }}
-                className="absolute top-full left-0 mt-2 px-3 py-1 bg-black/80 backdrop-blur-lg border border-white/20 rounded-lg text-xs text-gray-300 pointer-events-none z-10"
-                style={{
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                }}
-              >
-                Return to the world map
-                <div className="absolute -top-1 left-4 w-2 h-2 bg-black/80 border-l border-t border-white/20 transform rotate-45"></div>
-              </motion.div>
             </motion.div>
 
             {/* Mission Title - Centered */}
@@ -199,10 +186,10 @@ export default function MissionPage() {
             >
               <div className="bg-black/30 backdrop-blur-lg border border-white/20 rounded-2xl px-6 py-3 transform-gpu">
                 <h1 className="text-2xl font-bold text-white text-center">
-                  🧙‍♂️ Ethereal Exchange Mission
+                  🔄 Basic Swap Mission
                 </h1>
                 <p className="text-gray-300 text-sm text-center mt-1">
-                  Complete the mystical token swap to earn rewards
+                  Master the fundamentals of token swapping
                 </p>
               </div>
             </motion.div>
@@ -260,9 +247,9 @@ export default function MissionPage() {
                       textShadow: '0 0 10px rgba(168, 85, 247, 0.5)',
                     }}
                   >
-                    ⚡ MYSTICAL SWAP ⚡
+                    ⚡ BASIC SWAP ⚡
                   </motion.h2>
-                  <p className="text-gray-300 text-sm">Exchange your magical tokens</p>
+                  <p className="text-gray-300 text-sm">Simple token exchange</p>
                 </div>
 
                 {/* From Token Section */}

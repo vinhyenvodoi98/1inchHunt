@@ -84,6 +84,8 @@ export const Minimap: React.FC<MinimapProps> = ({
             key={`mini-zone-${zone.x}-${zone.y}`}
             className={`absolute rounded-full ${
               zone.type === 'swap' ? 'bg-blue-400' :
+              zone.type === 'advanced-swap' ? 'bg-purple-400' :
+              zone.type === 'limit-order' ? 'bg-emerald-400' :
               zone.type === 'boss' ? 'bg-red-400' :
               'bg-yellow-400'
             }`}
@@ -108,6 +110,9 @@ export const Minimap: React.FC<MinimapProps> = ({
       </div>
       <div className="text-gray-400 text-xs mt-1 text-center">
         <p>🟨 Player • ⬜ Viewport</p>
+        <p className="mt-1">
+          🔵 Basic • 🟣 Advanced • 🟢 Limit • 🔴 Boss • 🟡 Chest
+        </p>
       </div>
     </div>
   );
