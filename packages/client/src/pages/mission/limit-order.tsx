@@ -13,6 +13,7 @@ import {
   OrderPreview,
   ActiveOrders,
   ChartPrice,
+  LimitOrders,
   type Token,
   type LimitOrder,
 } from '@/components/mission';
@@ -95,38 +96,36 @@ export default function LimitOrderMissionPage() {
 
   const handleSubmitOrder = async () => {
     setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    setIsSubmitting(false);
-    setShowPreview(false);
-    setAmount('');
-    setPrice('');
     
-    // Create new order
-    const newOrder: LimitOrder = {
-      id: `order_${Date.now()}`,
-      fromToken,
-      toToken,
-      amount,
-      price,
-      type: 'buy', // Default to buy for limit orders
-      status: 'pending',
-      createdAt: new Date(),
-      expiration,
-    };
-    
-    setActiveOrders(prev => [...prev, newOrder]);
-    setOrdersCompleted(prev => prev + 1);
-    addExperience(1000); // More XP for limit orders
+    try {
+      // Here you would typically submit the order to a real blockchain or API
+      // For now, we'll simulate the process but not create mock orders
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Clear form
+      setAmount('');
+      setPrice('');
+      setShowPreview(false);
+      
+      // Update mission progress
+      setOrdersCompleted(prev => prev + 1);
+      addExperience(1000); // More XP for limit orders
+      
+      // Note: Real orders would be fetched from the 1inch API via the LimitOrders component
+      // The ActiveOrders component will show orders from the real API, not mock data
+      
+    } catch (error) {
+      console.error('Error submitting order:', error);
+      // Handle error appropriately
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancelOrder = (orderId: string) => {
-    setActiveOrders(prev => 
-      prev.map(order => 
-        order.id === orderId 
-          ? { ...order, status: 'cancelled' as const }
-          : order
-      )
-    );
+    // In a real implementation, this would call the blockchain or API to cancel the order
+    console.log('Cancelling order:', orderId);
+    // Real order cancellation would be handled by the 1inch API
   };
 
   const handleLevelUpComplete = () => {
@@ -144,6 +143,8 @@ export default function LimitOrderMissionPage() {
   const handleMarketPrice = () => {
     setPrice(getCurrentPrice());
   };
+
+  console.log('Limit order page - isConnected:', isConnected, 'address:', address);
 
   return (
     <>
@@ -376,18 +377,41 @@ export default function LimitOrderMissionPage() {
               isSubmitting={isSubmitting}
             />
 
-            {/* Active Orders */}
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: 'easeOut', delay: 0.6 }}
-              className="mt-8"
-            >
-              <ActiveOrders
-                orders={activeOrders}
-                onCancelOrder={handleCancelOrder}
-              />
-            </motion.div>
+            {/* Active Orders - Only show if there are real orders */}
+            {activeOrders.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.6 }}
+                className="mt-8"
+              >
+                <ActiveOrders
+                  orders={activeOrders}
+                  onCancelOrder={handleCancelOrder}
+                />
+              </motion.div>
+            )}
+
+            {/* Real Limit Orders from 1inch */}
+            {isConnected && address && (
+              <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.8 }}
+                className="mt-8"
+              >
+                <LimitOrders
+                  address={address}
+                  chainId={1}
+                  limit={20}
+                  statuses="1,2,3"
+                  onOrderClick={(order) => {
+                    console.log('Clicked order:', order);
+                    // Handle order click - could open details modal, etc.
+                  }}
+                />
+              </motion.div>
+            )}
           </div>
 
           {/* Floating Elements */}

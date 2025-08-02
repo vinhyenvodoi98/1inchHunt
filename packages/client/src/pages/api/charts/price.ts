@@ -75,50 +75,23 @@ export default async function handler(
       price: parseFloat(point.value),
     })) || [];
 
-    // If no data from 1inch, generate mock data for development
-    if (prices.length === 0) {
-      const mockPrices = generateMockPriceData(period as string);
-      return res.status(200).json({ prices: mockPrices });
-    }
-
     res.status(200).json({ prices });
   } catch (error) {
+    console.error('Error fetching price data:', error);
     
     // Handle axios errors
     if (axios.isAxiosError(error)) {
-      console.error('Axios error details:', error);
+      console.error('Axios error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
     }
     
-    // Return mock data for development if API fails
-    const mockPrices = generateMockPriceData(period as string);
-    res.status(200).json({ prices: mockPrices });
+    // Return empty result if API fails
+    res.status(200).json({ prices: [] });
   }
-}
-
-// Generate mock price data for development
-function generateMockPriceData(period: string): PriceData[] {
-  const now = Date.now();
-  const periodMs = getPeriodMs(period);
-  const dataPoints = 24; // 24 data points
-  const interval = periodMs / dataPoints;
-  
-  const prices: PriceData[] = [];
-  let basePrice = 1.5 + Math.random() * 2; // Random base price between 1.5-3.5
-
-  for (let i = 0; i < dataPoints; i++) {
-    const timestamp = now - (dataPoints - i) * interval;
-    
-    // Add some random variation to the price
-    const variation = (Math.random() - 0.5) * 0.1; // ±5% variation
-    basePrice = basePrice * (1 + variation);
-    
-    prices.push({
-      timestamp,
-      price: basePrice,
-    });
-  }
-
-  return prices;
 }
 
 function getPeriodMs(period: string): number {
