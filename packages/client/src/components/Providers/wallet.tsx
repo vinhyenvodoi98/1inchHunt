@@ -1,8 +1,9 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 const Wallet = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -134,7 +135,7 @@ const Wallet = () => {
                     </motion.button>
 
                     {/* Account Dropdown */}
-                    <div className="relative" ref={dropdownRef}>
+                    <div className="relative z-[60]" ref={dropdownRef}>
                       <motion.button
                         onClick={toggleDropdown}
                         type="button"
@@ -182,7 +183,7 @@ const Wallet = () => {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -10, scale: 0.95 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute right-0 mt-2 w-56 bg-black/30 backdrop-blur-lg border border-white/20 rounded-2xl shadow-2xl overflow-hidden"
+                          className="absolute right-0 mt-2 w-56 bg-black/30 backdrop-blur-lg border border-white/20 rounded-2xl shadow-2xl overflow-hidden z-[70]"
                           style={{
                             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
                           }}

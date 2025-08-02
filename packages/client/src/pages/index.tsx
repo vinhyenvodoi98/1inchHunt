@@ -3,7 +3,7 @@ import * as React from 'react';
 import CharacterCard from '@/components/CharacterCard';
 import GameMap from '@/components/GameMap';
 import MissionCard from '@/components/MissionCard';
-import RPGGameUI from '@/components/RPGGameUI';
+
 
 export default function HomePage() {
   return (
@@ -173,9 +173,6 @@ export default function HomePage() {
           </div>
         </div>
       </div>
-
-      {/* Original RPG Game UI */}
-      <RPGGameUI />
     </div>
   );
 }

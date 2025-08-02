@@ -1,276 +1,214 @@
-# 1inch API Library
+# 1inch API Integration
 
-A well-organized TypeScript library for integrating with the 1inch Swap API, split into modular files for better maintainability and developer experience.
+This directory contains the integration with the 1inch Portfolio API for fetching real-time token balances and portfolio data.
 
-## 📁 File Structure
+## Setup
 
+### 1. Get 1inch API Key
+
+1. Visit [1inch Developer Portal](https://portal.1inch.dev/)
+2. Sign up for a free account
+3. Create a new API key
+4. Copy your API key
+
+### 2. Configure Environment Variables
+
+Create a `.env.local` file in the `packages/client` directory:
+
+```env
+# 1inch API Configuration
+NEXT_PUBLIC_1INCH_API_KEY=your_1inch_api_key_here
+
+# WalletConnect Configuration
+NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_wallet_connect_project_id_here
 ```
-lib/1inch/
-├── index.ts          # Main export file
-├── types.ts          # Type definitions and interfaces
-├── utils.ts          # Common utility functions
-├── swap.ts           # Swap-related functions
-├── tokens.ts         # Token-related functions
-└── README.md         # This documentation
-```
 
-## 🚀 Quick Start
+### 3. Install Dependencies
 
-### Installation
+Make sure axios is installed:
 
 ```bash
 npm install axios
+# or
+pnpm add axios
 ```
 
-### Environment Setup
+## API Integration
 
-```env
-NEXT_PUBLIC_1INCH_API_KEY=your_1inch_api_key_here
+### Portfolio Service (`portfolio.ts`)
+
+The main service file contains:
+
+- **`fetchPortfolioData()`** - Fetches portfolio data from 1inch API
+- **`getTokenIcon()`** - Maps token symbols to emoji icons
+- **`getTokenColor()`** - Maps token symbols to Tailwind gradient classes
+- **TypeScript interfaces** for type safety
+
+### API Endpoint
+
 ```
+GET https://api.1inch.dev/portfolio/v5.2/{chain_id}/portfolio/{wallet_address}
+```
+
+### Supported Chains
+
+The API supports multiple chains including:
+- Ethereum (1)
+- Polygon (137)
+- BSC (56)
+- Arbitrum (42161)
+- Optimism (10)
+- And many more...
+
+## Usage
 
 ### Basic Usage
 
 ```typescript
-import { get1inchSwap, get1inchTokens, COMMON_TOKENS } from '@/lib/1inch';
+import { fetchPortfolioData } from '@/lib/1inch/portfolio';
 
-// Get swap transaction data
-const swapData = await get1inchSwap({
-  fromTokenAddress: COMMON_TOKENS.ETH,
-  toTokenAddress: COMMON_TOKENS.USDC,
-  amount: '100000000000000000', // 0.1 ETH
-  fromAddress: userAddress,
-  slippage: 1
-});
+// Fetch portfolio data
+const portfolioData = await fetchPortfolioData(
+  '0x1234...5678', // wallet address
+  1 // chain ID (Ethereum)
+);
 
-// Get token metadata
-const tokens = await get1inchTokens();
-```
-
-## 📚 API Reference
-
-### 🔄 Swap Functions (`swap.ts`)
-
-#### `get1inchSwap(params: SwapParams)`
-Get swap transaction data from 1inch API.
-
-```typescript
-const txData = await get1inchSwap({
-  fromTokenAddress: '0x...',
-  toTokenAddress: '0x...',
-  amount: '1000000',
-  fromAddress: '0x...',
-  slippage: 1
-});
-```
-
-#### `get1inchAllowance(tokenAddress: string, ownerAddress: string)`
-Check current token allowance for 1inch router.
-
-#### `get1inchApproval(tokenAddress: string, amount?: string)`
-Get approval transaction data for 1inch router.
-
-### 🪙 Token Functions (`tokens.ts`)
-
-#### `get1inchTokens(tokenAddress?: string)`
-Get all tokens or specific token metadata.
-
-```typescript
-// Get all tokens
-const allTokens = await get1inchTokens();
-
-// Get specific token
-const usdcToken = await get1inchTokens(COMMON_TOKENS.USDC);
-```
-
-#### `searchTokens(query: string, limit?: number)`
-Search tokens by symbol or name.
-
-```typescript
-const results = await searchTokens('USD', 5);
-```
-
-#### `getTokenBySymbol(symbol: string)`
-Find token by symbol.
-
-```typescript
-const usdc = await getTokenBySymbol('USDC');
-```
-
-#### `getTokensByAddresses(addresses: string[])`
-Get multiple tokens by their addresses.
-
-#### `getCommonTokens()`
-Get metadata for commonly used tokens.
-
-### 🛠️ Utility Functions (`utils.ts`)
-
-#### `isValidAddress(address: string)`
-Validate Ethereum address format.
-
-#### `validateSwapParams(...)`
-Validate swap parameters before API call.
-
-#### `handleApiError(error: any, context: string)`
-Centralized error handling for API calls.
-
-### 📝 Types (`types.ts`)
-
-#### Core Interfaces
-- `SwapParams` - Swap function parameters
-- `SwapTransactionData` - viem-compatible transaction data
-- `TokenMetadata` - Token information structure
-- `SwapAPIError` - Custom error class
-
-## 🎯 Usage Examples
-
-### Complete Swap Flow
-
-```typescript
-import { 
-  get1inchSwap, 
-  get1inchAllowance, 
-  get1inchApproval,
-  COMMON_TOKENS,
-  SwapAPIError 
-} from '@/lib/1inch';
-import { sendTransaction } from '@wagmi/core';
-
-async function performCompleteSwap() {
-  try {
-    // 1. Check allowance (for ERC20 tokens)
-    const allowance = await get1inchAllowance(
-      COMMON_TOKENS.USDC, 
-      userAddress
-    );
-    
-    // 2. Approve if needed
-    if (BigInt(allowance) < BigInt(swapAmount)) {
-      const approvalTx = await get1inchApproval(COMMON_TOKENS.USDC);
-      await sendTransaction(approvalTx);
-    }
-    
-    // 3. Perform swap
-    const swapTx = await get1inchSwap({
-      fromTokenAddress: COMMON_TOKENS.USDC,
-      toTokenAddress: COMMON_TOKENS.ETH,
-      amount: swapAmount,
-      fromAddress: userAddress,
-      slippage: 1
-    });
-    
-    const hash = await sendTransaction(swapTx);
-    console.log('Swap successful:', hash);
-    
-  } catch (error) {
-    if (error instanceof SwapAPIError) {
-      console.error('1inch API Error:', error.message);
-      console.error('Status:', error.statusCode);
-    } else {
-      console.error('Unexpected error:', error);
-    }
-  }
-}
-```
-
-### Token Search Interface
-
-```typescript
-import { searchTokens, getTokenBySymbol } from '@/lib/1inch';
-
-// Search component
-async function handleTokenSearch(query: string) {
-  try {
-    const results = await searchTokens(query, 10);
-    return results.map(token => ({
-      label: `${token.symbol} - ${token.name}`,
-      value: token.address,
-      logo: token.logoURI
-    }));
-  } catch (error) {
-    console.error('Search failed:', error);
-    return [];
-  }
-}
-```
-
-## 🔧 Advanced Configuration
-
-### Custom Network Support
-
-To use with other networks, update the API endpoints in each function:
-
-```typescript
-// For Polygon
-const url = 'https://api.1inch.dev/swap/v5.2/137/swap';
-
-// For BSC  
-const url = 'https://api.1inch.dev/swap/v5.2/56/swap';
+console.log(portfolioData.tokens); // Array of token balances
+console.log(portfolioData.totalValue); // Total portfolio value
 ```
 
 ### Error Handling
 
-The library provides comprehensive error handling with specific error types:
+The service includes comprehensive error handling:
 
 ```typescript
 try {
-  await get1inchSwap(params);
+  const portfolioData = await fetchPortfolioData(address, chainId);
+  // Handle success
 } catch (error) {
-  if (error instanceof SwapAPIError) {
-    switch (error.statusCode) {
-      case 400:
-        // Handle bad request
-        break;
-      case 401:
-        // Handle unauthorized
-        break;
-      case 429:
-        // Handle rate limit
-        break;
-      default:
-        // Handle other API errors
-        break;
-    }
-  }
+  const portfolioError = error as PortfolioError;
+  console.error(portfolioError.message);
+  // Handle error
 }
 ```
 
-## 🎁 Common Tokens
+### Error Types
 
-The library includes predefined addresses for common tokens:
+- **`API_ERROR`** - Server responded with error status
+- **`NETWORK_ERROR`** - Unable to reach 1inch API
+- **`REQUEST_ERROR`** - Request configuration error
+- **`VALIDATION_ERROR`** - Invalid input parameters
 
-```typescript
-import { COMMON_TOKENS } from '@/lib/1inch';
+## Data Structure
 
-// Available tokens:
-COMMON_TOKENS.ETH    // Native ETH
-COMMON_TOKENS.WETH   // Wrapped ETH
-COMMON_TOKENS.USDC   // USD Coin
-COMMON_TOKENS.USDT   // Tether USD
-COMMON_TOKENS.DAI    // Dai Stablecoin
-COMMON_TOKENS.WBTC   // Wrapped Bitcoin
-COMMON_TOKENS.UNI    // Uniswap
-COMMON_TOKENS.LINK   // Chainlink
-COMMON_TOKENS.AAVE   // Aave
-COMMON_TOKENS.SUSHI  // SushiSwap
-```
-
-## 🚦 Rate Limits & Best Practices
-
-- API calls include 10-second timeouts
-- Proper error handling for rate limits (HTTP 429)
-- Input validation before API calls
-- Centralized error handling across all functions
-
-## 🔗 Migration from Old Structure
-
-If migrating from the old `utils/swapApi.ts`:
+### TokenBalance Interface
 
 ```typescript
-// Old import
-import { get1inchSwap } from '@/utils/swapApi';
-
-// New import
-import { get1inchSwap } from '@/lib/1inch';
+interface TokenBalance {
+  symbol: string;        // Token symbol (e.g., "ETH")
+  name: string;          // Token name (e.g., "Ethereum")
+  address: string;       // Token contract address
+  decimals: number;      // Token decimals
+  logoURI?: string;      // Token logo URL
+  tags?: string[];       // Token tags
+  balance: string;       // Raw balance amount
+  price: number;         // Current token price in USD
+  value: number;         // Total value in USD
+  change24h?: number;    // 24h price change percentage
+}
 ```
 
-All function signatures remain the same for backward compatibility. 
+### PortfolioResponse Interface
+
+```typescript
+interface PortfolioResponse {
+  tokens: TokenBalance[];    // Array of token balances
+  totalValue: number;        // Total portfolio value in USD
+  chainId: number;          // Blockchain chain ID
+  walletAddress: string;    // Wallet address
+}
+```
+
+## Features
+
+### Token Icons
+
+The service automatically maps common tokens to emoji icons:
+
+- ETH → 🔵
+- BTC → 🟡
+- USDC → 💙
+- MATIC → 🟣
+- LINK → 🔗
+- UNI → 🦄
+- And many more...
+
+### Token Colors
+
+Each token gets a unique gradient color based on its symbol:
+
+- ETH → `from-blue-400 to-blue-600`
+- BTC → `from-yellow-400 to-orange-500`
+- USDC → `from-blue-400 to-cyan-500`
+- And many more...
+
+### Data Filtering
+
+The service automatically:
+- Filters out tokens with zero balance
+- Sorts tokens by value (highest first)
+- Validates response data
+- Handles missing or invalid data gracefully
+
+## Rate Limits
+
+The 1inch API has rate limits:
+- Free tier: 100 requests per minute
+- Paid tiers: Higher limits available
+
+## Security
+
+- API key is stored in environment variables
+- No sensitive data is logged
+- Input validation prevents injection attacks
+- Timeout protection (10 seconds)
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"1inch API key not configured"**
+   - Make sure `NEXT_PUBLIC_1INCH_API_KEY` is set in `.env.local`
+
+2. **"Invalid wallet address format"**
+   - Ensure wallet address is a valid Ethereum address (0x...)
+
+3. **"Network error: Unable to reach 1inch API"**
+   - Check your internet connection
+   - Verify the API endpoint is accessible
+
+4. **"API error: 401 - Unauthorized"**
+   - Check if your API key is valid
+   - Ensure you have sufficient credits/quota
+
+### Debug Mode
+
+Enable debug logging by adding to your environment:
+
+```env
+NEXT_PUBLIC_DEBUG=1
+```
+
+This will log API requests and responses to the console.
+
+## File Structure
+
+```
+1inch/
+├── README.md           # This documentation
+├── portfolio.ts        # Portfolio API service
+├── swap.ts            # Swap API service (existing)
+├── tokens.ts          # Token metadata service (existing)
+├── types.ts           # Shared types (existing)
+└── utils.ts           # Utility functions (existing)
+``` 

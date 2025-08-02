@@ -1,10 +1,14 @@
 import * as React from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/router';
+import { useAccount } from 'wagmi';
 
 import Wallet from '@/components/Providers/wallet';
 import LevelUpAnimation from '@/components/LevelUpAnimation';
 
 export default function Header() {
+  const router = useRouter();
+  const { address } = useAccount();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [showLevelUp, setShowLevelUp] = React.useState(false);
 
@@ -51,7 +55,7 @@ export default function Header() {
       >
         <div className='px-6 py-4'>
           <motion.div
-            className="bg-black/20 backdrop-blur-lg border border-white/20 rounded-2xl shadow-2xl overflow-hidden"
+            className="bg-black/20 backdrop-blur-lg border border-white/20 rounded-2xl shadow-2xl"
             style={{
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 30px rgba(168, 85, 247, 0.2)',
             }}
@@ -60,11 +64,17 @@ export default function Header() {
               {/* Left Side - Brand + Character Info */}
               <div className="flex items-center space-x-6">
                 {/* Brand Logo */}
-                <div className="flex items-center space-x-4">
+                <motion.div 
+                  className="flex items-center space-x-4 cursor-pointer group"
+                  onClick={() => router.push('/')}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  title="Go to Home"
+                >
                   <motion.div
                     whileHover={{ scale: 1.1, rotate: 360 }}
                     transition={{ duration: 0.3 }}
-                    className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-xl shadow-lg"
+                    className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-xl shadow-lg group-hover:shadow-2xl"
                     style={{
                       boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)',
                     }}
@@ -78,14 +88,19 @@ export default function Header() {
                   >
                     HashHunt
                   </motion.h1>
-                </div>
+                </motion.div>
 
                 {/* Character Avatar + Stats */}
                 <div className="hidden lg:flex items-center space-x-4 border-l border-white/20 pl-6">
                   {/* Character Avatar */}
                   <motion.div
                     whileHover={{ scale: 1.1 }}
-                    className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-2xl shadow-lg ring-2 ring-amber-300/50 ring-offset-2 ring-offset-transparent"
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => address && router.push(`/profile/${address}`)}
+                    className={`w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-2xl shadow-lg ring-2 ring-amber-300/50 ring-offset-2 ring-offset-transparent transition-all duration-300 ${
+                      address ? 'cursor-pointer hover:ring-amber-200 hover:shadow-xl' : 'cursor-default'
+                    }`}
+                    title={address ? 'View Profile' : 'Connect wallet to view profile'}
                   >
                     {character.avatar}
                   </motion.div>
@@ -240,7 +255,12 @@ export default function Header() {
                   <div className="lg:hidden flex items-center space-x-4 mb-4 pb-4 border-b border-white/10">
                     <motion.div
                       whileHover={{ scale: 1.1 }}
-                      className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-xl shadow-lg"
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => address && router.push(`/profile/${address}`)}
+                      className={`w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-xl shadow-lg transition-all duration-300 ${
+                        address ? 'cursor-pointer hover:shadow-xl' : 'cursor-default'
+                      }`}
+                      title={address ? 'View Profile' : 'Connect wallet to view profile'}
                     >
                       {character.avatar}
                     </motion.div>
