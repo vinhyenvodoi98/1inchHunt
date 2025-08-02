@@ -1,29 +1,20 @@
 import * as React from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/router';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
 
 import Layout from '@/components/layout/Layout';
 import LevelUpAnimation from '@/components/LevelUpAnimation';
-
-interface Token {
-  symbol: string;
-  name: string;
-  icon: string;
-  balance: number;
-  decimals: number;
-  price: number;
-}
-
-interface LimitOrder {
-  id: string;
-  fromToken: Token;
-  toToken: Token;
-  amount: string;
-  price: string;
-  type: 'buy' | 'sell';
-  status: 'pending' | 'filled' | 'cancelled';
-  createdAt: Date;
-}
+import {
+  TokenSelector,
+  AmountInput,
+  ExpirationSelector,
+  WalletConnection,
+  OrderPreview,
+  ActiveOrders,
+  type Token,
+  type LimitOrder,
+} from '@/components/mission';
 
 const availableTokens: Token[] = [
   { symbol: 'ETH', name: 'Ethereum', icon: '⟐', balance: 2.5, decimals: 18, price: 3200 },
@@ -32,20 +23,30 @@ const availableTokens: Token[] = [
   { symbol: 'DAI', name: 'Dai Stablecoin', icon: '🪙', balance: 850.0, decimals: 18, price: 1 },
   { symbol: 'UNI', name: 'Uniswap', icon: '🦄', balance: 45.2, decimals: 18, price: 12.5 },
   { symbol: 'LINK', name: 'Chainlink', icon: '🔗', balance: 120.5, decimals: 18, price: 18.2 },
+  { symbol: 'AAVE', name: 'Aave', icon: '🦇', balance: 8.7, decimals: 18, price: 95.3 },
 ];
 
 export default function LimitOrderMissionPage() {
   const router = useRouter();
+  
+  // Form state
   const [fromToken, setFromToken] = React.useState<Token>(availableTokens[0]);
   const [toToken, setToToken] = React.useState<Token>(availableTokens[1]);
   const [amount, setAmount] = React.useState<string>('');
   const [price, setPrice] = React.useState<string>('');
-  const [orderType, setOrderType] = React.useState<'buy' | 'sell'>('buy');
-  const [isCreating, setIsCreating] = React.useState(false);
+  const [expiration, setExpiration] = React.useState<string>('1h');
+  
+  // UI state
   const [showPreview, setShowPreview] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showLevelUp, setShowLevelUp] = React.useState(false);
   const [ordersCompleted, setOrdersCompleted] = React.useState(0);
   const [activeOrders, setActiveOrders] = React.useState<LimitOrder[]>([]);
+  
+  // Wagmi wallet hooks
+  const { address, isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
+  const { disconnect } = useDisconnect();
 
   // Character state for level up functionality
   const [character, setCharacter] = React.useState({
@@ -63,14 +64,15 @@ export default function LimitOrderMissionPage() {
   };
 
   const handlePreview = () => {
+    if (!isConnected) {
+      alert('Please connect your wallet first!');
+      return;
+    }
+    if (!amount || !price || parseFloat(amount) <= 0 || parseFloat(price) <= 0) {
+      alert('Please fill in all required fields!');
+      return;
+    }
     setShowPreview(true);
-    // Simulate price calculation
-    setTimeout(() => {
-      const currentPrice = fromToken.price / toToken.price;
-      const limitPrice = parseFloat(price) || currentPrice;
-      const totalValue = parseFloat(amount) * limitPrice;
-      // Additional preview logic here
-    }, 1000);
   };
 
   const addExperience = (amount: number) => {
@@ -89,10 +91,10 @@ export default function LimitOrderMissionPage() {
     });
   };
 
-  const handleCreateOrder = async () => {
-    setIsCreating(true);
+  const handleSubmitOrder = async () => {
+    setIsSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 3000));
-    setIsCreating(false);
+    setIsSubmitting(false);
     setShowPreview(false);
     setAmount('');
     setPrice('');
@@ -104,9 +106,10 @@ export default function LimitOrderMissionPage() {
       toToken,
       amount,
       price,
-      type: orderType,
+      type: 'buy', // Default to buy for limit orders
       status: 'pending',
       createdAt: new Date(),
+      expiration,
     };
     
     setActiveOrders(prev => [...prev, newOrder]);
@@ -132,9 +135,12 @@ export default function LimitOrderMissionPage() {
     return (fromToken.price / toToken.price).toFixed(4);
   };
 
-  const getOrderValue = () => {
-    if (!amount || !price) return '0';
-    return (parseFloat(amount) * parseFloat(price)).toFixed(2);
+  const handleMaxAmount = () => {
+    setAmount(fromToken.balance.toString());
+  };
+
+  const handleMarketPrice = () => {
+    setPrice(getCurrentPrice());
   };
 
   return (
@@ -217,299 +223,112 @@ export default function LimitOrderMissionPage() {
                   <p className="text-gray-300 text-sm">Set your price, set your strategy</p>
                 </div>
 
-                {/* Order Type Selection */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="mb-6"
-                >
-                  <label className="block text-gray-300 text-sm font-bold mb-2 uppercase tracking-wide">
-                    📈 Order Type
-                  </label>
-                  <div className="flex space-x-2">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setOrderType('buy')}
-                      className={`flex-1 py-3 rounded-xl font-bold transition-all duration-300 ${
-                        orderType === 'buy'
-                          ? 'bg-green-600 text-white shadow-lg'
-                          : 'bg-black/30 text-gray-300 border border-white/20 hover:bg-black/50'
-                      }`}
-                    >
-                      🟢 BUY
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setOrderType('sell')}
-                      className={`flex-1 py-3 rounded-xl font-bold transition-all duration-300 ${
-                        orderType === 'sell'
-                          ? 'bg-red-600 text-white shadow-lg'
-                          : 'bg-black/30 text-gray-300 border border-white/20 hover:bg-black/50'
-                      }`}
-                    >
-                      🔴 SELL
-                    </motion.button>
-                  </div>
-                </motion.div>
 
-                {/* From Token Section */}
-                <motion.div 
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="mb-4"
-                >
-                  <label className="block text-gray-300 text-sm font-bold mb-2 uppercase tracking-wide">
-                    🔮 {orderType === 'buy' ? 'Pay With' : 'Sell'}
-                  </label>
-                  <select
-                    value={fromToken.symbol}
-                    onChange={(e) => setFromToken(availableTokens.find(t => t.symbol === e.target.value) || availableTokens[0])}
-                    className="w-full bg-black/30 border-2 border-emerald-500/50 rounded-xl px-4 py-3 text-white font-mono text-lg focus:border-emerald-400 focus:outline-none transition-all duration-300"
-                  >
-                    {availableTokens.map((token) => (
-                      <option key={token.symbol} value={token.symbol} className="bg-emerald-900">
-                        {token.icon} {token.symbol} - {token.name}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="mt-2 text-right text-xs text-gray-400">
-                    Balance: {fromToken.balance} {fromToken.symbol}
-                  </div>
-                </motion.div>
 
-                {/* Amount Input */}
-                <motion.div 
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 }}
-                  className="mb-4"
-                >
-                  <label className="block text-gray-300 text-sm font-bold mb-2 uppercase tracking-wide">
-                    💰 Amount
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="0.0"
-                      className="w-full bg-black/30 border-2 border-teal-500/50 rounded-xl px-4 py-3 text-white font-mono text-xl focus:border-teal-400 focus:outline-none transition-all duration-300"
-                    />
-                    <button
-                      onClick={() => setAmount(fromToken.balance.toString())}
-                      className="absolute right-2 top-2 px-3 py-1 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition-all duration-300"
-                    >
-                      MAX
-                    </button>
-                  </div>
-                </motion.div>
 
-                {/* Swap Direction Button */}
-                <div className="flex justify-center mb-4">
-                  <motion.button
-                    whileHover={{ scale: 1.1, rotate: 180 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={handleSwapTokens}
-                    className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white text-xl shadow-lg border-2 border-white/20"
-                  >
-                    ⇅
-                  </motion.button>
-                </div>
 
-                {/* To Token Section */}
-                <motion.div 
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.6 }}
-                  className="mb-4"
-                >
-                  <label className="block text-gray-300 text-sm font-bold mb-2 uppercase tracking-wide">
-                    🎯 {orderType === 'buy' ? 'Buy' : 'Receive'}
-                  </label>
-                  <select
-                    value={toToken.symbol}
-                    onChange={(e) => setToToken(availableTokens.find(t => t.symbol === e.target.value) || availableTokens[1])}
-                    className="w-full bg-black/30 border-2 border-cyan-500/50 rounded-xl px-4 py-3 text-white font-mono text-lg focus:border-cyan-400 focus:outline-none transition-all duration-300"
-                  >
-                    {availableTokens.map((token) => (
-                      <option key={token.symbol} value={token.symbol} className="bg-emerald-900">
-                        {token.icon} {token.symbol} - {token.name}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="mt-2 text-right text-xs text-gray-400">
-                    Balance: {toToken.balance} {toToken.symbol}
-                  </div>
-                </motion.div>
+                                                  {/* From Token */}
+                 <TokenSelector
+                   label="From"
+                   selectedToken={fromToken}
+                   onTokenChange={setFromToken}
+                   availableTokens={availableTokens}
+                   disabled={!isConnected}
+                 />
 
-                {/* Price Input */}
-                <motion.div 
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.7 }}
-                  className="mb-6"
-                >
-                  <label className="block text-gray-300 text-sm font-bold mb-2 uppercase tracking-wide">
-                    💵 Limit Price ({toToken.symbol}/{fromToken.symbol})
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      placeholder={getCurrentPrice()}
-                      className="w-full bg-black/30 border-2 border-cyan-500/50 rounded-xl px-4 py-3 text-white font-mono text-xl focus:border-cyan-400 focus:outline-none transition-all duration-300"
-                    />
-                    <button
-                      onClick={() => setPrice(getCurrentPrice())}
-                      className="absolute right-2 top-2 px-3 py-1 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold rounded-lg transition-all duration-300"
-                    >
-                      MARKET
-                    </button>
-                  </div>
-                  <div className="mt-2 text-right text-xs text-gray-400">
-                    Current Price: {getCurrentPrice()} {toToken.symbol}/{fromToken.symbol}
-                  </div>
-                </motion.div>
+                 {/* Amount Input */}
+                 <AmountInput
+                   label="Amount"
+                   value={amount}
+                   onChange={setAmount}
+                   placeholder="0.0"
+                   maxValue={fromToken.balance}
+                   onMaxClick={handleMaxAmount}
+                   disabled={!isConnected}
+                 />
+
+                 {/* Swap Direction Button */}
+                 <div className="flex justify-center mb-4">
+                   <motion.button
+                     whileHover={{ scale: 1.1, rotate: 180 }}
+                     whileTap={{ scale: 0.9 }}
+                     onClick={handleSwapTokens}
+                     className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white text-xl shadow-lg border-2 border-white/20"
+                   >
+                     ⇅
+                   </motion.button>
+                 </div>
+
+                 {/* To Token */}
+                 <TokenSelector
+                   label="To"
+                   selectedToken={toToken}
+                   onTokenChange={setToToken}
+                   availableTokens={availableTokens}
+                   disabled={!isConnected}
+                 />
+
+                 {/* Price Input */}
+                 <AmountInput
+                   label={`Limit Price (${toToken.symbol}/${fromToken.symbol})`}
+                   value={price}
+                   onChange={setPrice}
+                   placeholder={getCurrentPrice()}
+                   onMaxClick={handleMarketPrice}
+                   disabled={!isConnected}
+                 />
+
+                 {/* Current Price Display */}
+                 <div className="mt-2 text-right text-xs text-gray-400">
+                   Current Price: {getCurrentPrice()} {toToken.symbol}/{fromToken.symbol}
+                 </div>
+
+                 {/* Expiration Selector */}
+                 <ExpirationSelector
+                   selectedExpiration={expiration}
+                   onExpirationChange={setExpiration}
+                   disabled={!isConnected}
+                 />
 
                 {/* Order Preview */}
-                {showPreview && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="mb-6 p-4 bg-black/20 border border-white/10 rounded-xl"
-                  >
-                    <h4 className="text-white font-bold mb-3 flex items-center">
-                      🔍 Order Preview
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Order Type:</span>
-                        <span className={`font-mono ${orderType === 'buy' ? 'text-green-400' : 'text-red-400'}`}>
-                          {orderType.toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Amount:</span>
-                        <span className="text-white font-mono">{amount} {fromToken.symbol}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Price:</span>
-                        <span className="text-cyan-400 font-mono">{price} {toToken.symbol}/{fromToken.symbol}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Total Value:</span>
-                        <span className="text-emerald-400 font-mono">{getOrderValue()} {toToken.symbol}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Status:</span>
-                        <span className="text-yellow-400 font-mono">PENDING</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
+                                 <OrderPreview
+                   isVisible={showPreview}
+                   fromToken={fromToken}
+                   toToken={toToken}
+                   amount={amount}
+                   price={price}
+                   expiration={expiration}
+                   orderType="buy"
+                   onConfirm={handleSubmitOrder}
+                   onCancel={() => setShowPreview(false)}
+                   isSubmitting={isSubmitting}
+                 />
 
-                {/* Action Buttons */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 }}
-                  className="space-y-3"
-                >
-                  {!showPreview ? (
+                {/* Action Button */}
+                {!showPreview && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 }}
+                    className="mt-6"
+                  >
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={handlePreview}
-                      disabled={!amount || !price || parseFloat(amount) <= 0 || parseFloat(price) <= 0}
+                      disabled={!isConnected || !amount || !price || parseFloat(amount) <= 0 || parseFloat(price) <= 0}
                       className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:from-gray-500 disabled:to-gray-600 text-white font-bold rounded-xl transition-all duration-300 uppercase tracking-wide"
                     >
                       🔮 Preview Order
                     </motion.button>
-                  ) : (
-                    <div className="space-y-3">
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleCreateOrder}
-                        disabled={isCreating}
-                        className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 disabled:from-gray-500 disabled:to-gray-600 text-white font-bold rounded-xl transition-all duration-300 uppercase tracking-wide"
-                      >
-                        {isCreating ? (
-                          <div className="flex items-center justify-center space-x-2">
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                              className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                            />
-                            <span>⚡ Creating Order...</span>
-                          </div>
-                        ) : (
-                          '⚔️ Place Limit Order'
-                        )}
-                      </motion.button>
-                      
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => setShowPreview(false)}
-                        className="w-full py-3 bg-gray-600 hover:bg-gray-500 text-white font-bold rounded-xl transition-all duration-300 uppercase tracking-wide"
-                      >
-                        📝 Edit Order
-                      </motion.button>
-                    </div>
-                  )}
-                </motion.div>
-
-                {/* Active Orders */}
-                {activeOrders.length > 0 && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.9 }}
-                    className="mt-6"
-                  >
-                    <h4 className="text-white font-bold mb-3">📋 Active Orders</h4>
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {activeOrders.map((order) => (
-                        <div
-                          key={order.id}
-                          className="p-3 bg-black/20 border border-white/10 rounded-lg"
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className={`text-xs font-bold ${order.type === 'buy' ? 'text-green-400' : 'text-red-400'}`}>
-                              {order.type.toUpperCase()}
-                            </span>
-                            <span className={`text-xs ${
-                              order.status === 'pending' ? 'text-yellow-400' :
-                              order.status === 'filled' ? 'text-green-400' :
-                              'text-red-400'
-                            }`}>
-                              {order.status.toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="text-xs text-gray-300 mb-2">
-                            {order.amount} {order.fromToken.symbol} @ {order.price} {order.toToken.symbol}/{order.fromToken.symbol}
-                          </div>
-                          {order.status === 'pending' && (
-                            <button
-                              onClick={() => handleCancelOrder(order.id)}
-                              className="w-full py-1 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded transition-all duration-300"
-                            >
-                              Cancel Order
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
                   </motion.div>
                 )}
+
+                {/* Active Orders */}
+                <ActiveOrders
+                  orders={activeOrders}
+                  onCancelOrder={handleCancelOrder}
+                />
 
                 {/* Mission Progress */}
                 <motion.div 
