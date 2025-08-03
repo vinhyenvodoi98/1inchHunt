@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { useAccount, useContractRead } from 'wagmi';
-import { erc20ABI } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import { Token } from '@/constant/tokens';
 import { checkAndApproveToken } from '@/utils/approval';
 import { getLimitOrderV4Domain } from "@1inch/limit-order-sdk";
+import { callContract } from '@/utils/provider';
 
 interface AllowanceCheckerProps {
   fromToken: Token;
@@ -28,6 +28,7 @@ export const AllowanceChecker: React.FC<AllowanceCheckerProps> = ({
   const [isApproving, setIsApproving] = React.useState(false);
   const [allowance, setAllowance] = React.useState<bigint>(BigInt(0));
   const [isApproved, setIsApproved] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   // Parse amount to wei
   const amountInWei = React.useMemo(() => {
@@ -50,25 +51,40 @@ export const AllowanceChecker: React.FC<AllowanceCheckerProps> = ({
     }
   }, [chainId]);
 
-  // Read current allowance
-  const { data: currentAllowance, refetch: refetchAllowance } = useContractRead({
-    address: fromToken.address as `0x${string}`,
-    abi: erc20ABI,
-    functionName: 'allowance',
-    args: [address as `0x${string}`, limitOrderContractAddress as `0x${string}`],
-    enabled: !!address && !!fromToken.address && amountInWei > BigInt(0),
-    watch: true,
-  });
-
-  // Check allowance when it changes
-  React.useEffect(() => {
-    if (currentAllowance !== undefined) {
-      setAllowance(currentAllowance);
-      const approved = currentAllowance >= amountInWei;
+  // Check allowance using direct contract call
+  const checkAllowance = React.useCallback(async () => {
+    if (!address || !fromToken.address || amountInWei <= BigInt(0)) return;
+    
+    setIsLoading(true);
+    
+    try {
+      // ERC20 allowance function signature: 0xdd62ed3e
+      // Parameters: owner (address), spender (address)
+      const allowanceData = `0xdd62ed3e${address.slice(2).padStart(64, '0')}${limitOrderContractAddress.slice(2).padStart(64, '0')}`;
+      
+      const currentAllowance = await callContract(fromToken.address, allowanceData, address);
+      const allowanceBigInt = BigInt(currentAllowance);
+      
+      setAllowance(allowanceBigInt);
+      
+      const approved = allowanceBigInt >= amountInWei;
       setIsApproved(approved);
       onAllowanceChecked(approved);
+      
+    } catch (error) {
+      console.error('Error checking allowance:', error);
+      setAllowance(BigInt(0));
+      setIsApproved(false);
+      onAllowanceChecked(false);
+    } finally {
+      setIsLoading(false);
     }
-  }, [currentAllowance, amountInWei, onAllowanceChecked]);
+  }, [address, fromToken.address, limitOrderContractAddress, amountInWei, onAllowanceChecked]);
+
+  // Check allowance on mount and when dependencies change
+  React.useEffect(() => {
+    checkAllowance();
+  }, [checkAllowance]);
 
   // Handle approve button click using 1inch SDK
   const handleApprove = async () => {
@@ -77,26 +93,17 @@ export const AllowanceChecker: React.FC<AllowanceCheckerProps> = ({
     setIsApproving(true);
     
     try {
-      // Get the wallet provider
-      const provider = (window as any).ethereum;
-      if (!provider) {
-        throw new Error('No wallet provider found');
-      }
-
       // Use the approval utility function
       await checkAndApproveToken({
         tokenAddress: fromToken.address,
         amount: amount,
         decimals: fromToken.decimals,
         userAddress: address,
-        provider: provider,
         chainId: chainId
       });
       
       // Update allowance and approval status
-      refetchAllowance();
-      setIsApproved(true);
-      onAllowanceChecked(true);
+      await checkAllowance();
       
     } catch (error) {
       console.error('Approval failed:', error);
@@ -137,7 +144,9 @@ export const AllowanceChecker: React.FC<AllowanceCheckerProps> = ({
         <div className="space-y-2 text-xs text-gray-300">
           <div className="flex justify-between">
             <span>Current Allowance:</span>
-            <span className="font-mono">{formatAllowance(allowance)} {fromToken.symbol}</span>
+            <span className="font-mono">
+              {isLoading ? 'Loading...' : `${formatAllowance(allowance)} ${fromToken.symbol}`}
+            </span>
           </div>
           <div className="flex justify-between">
             <span>Required Amount:</span>
@@ -150,9 +159,9 @@ export const AllowanceChecker: React.FC<AllowanceCheckerProps> = ({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleApprove}
-            disabled={disabled || isApproving}
+            disabled={disabled || isApproving || isLoading}
             className={`w-full mt-3 py-2 px-4 rounded-lg font-bold text-sm transition-all duration-300 ${
-              disabled || isApproving
+              disabled || isApproving || isLoading
                 ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                 : 'bg-blue-600 hover:bg-blue-500 text-white'
             }`}

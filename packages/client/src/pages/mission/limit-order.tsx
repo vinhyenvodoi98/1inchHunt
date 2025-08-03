@@ -20,14 +20,11 @@ import {
 } from '@/components/mission';
 
 import {
-  LimitOrder,
-  MakerTraits,
-  Address,
-  Api,
   getLimitOrderV4Domain,
 } from "@1inch/limit-order-sdk";
 
 import { availableTokens, getDefaultTokens, type Token } from '@/constant/tokens';
+import { signTypedData } from '@/utils/provider';
 
 export default function LimitOrderMissionPage() {
   const router = useRouter();
@@ -103,28 +100,155 @@ export default function LimitOrderMissionPage() {
   };
 
   const handleSubmitOrder = async () => {
+    if (!address || !fromToken.address || !toToken.address) {
+      alert('Missing required data for order creation');
+      return;
+    }
+
+    // Validate address format
+    if (!address.startsWith('0x') || address.length !== 42) {
+      alert('Invalid wallet address format');
+      return;
+    }
+
+    console.log('Creating order with address:', address);
+    console.log('Address validation:', {
+      startsWith0x: address.startsWith('0x'),
+      length: address.length,
+      isValid: address.startsWith('0x') && address.length === 42
+    });
+
     setIsSubmitting(true);
     
     try {
-      // Here you would typically submit the order to a real blockchain or API
-      // For now, we'll simulate the process but not create mock orders
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Get the limit order domain for the current chain
+      const chainId = 1; // Ethereum mainnet
+      const domain = getLimitOrderV4Domain(chainId);
       
-      // Clear form
-      setAmount('');
-      setPrice('');
-      setShowPreview(false);
+      // Calculate amounts in wei
+      const makingAmount = BigInt(parseFloat(amount) * Math.pow(10, fromToken.decimals));
+      const takingAmount = BigInt(parseFloat(amount) * parseFloat(price) * Math.pow(10, toToken.decimals));
       
-      // Update mission progress
-      setOrdersCompleted(prev => prev + 1);
-      addExperience(1000); // More XP for limit orders
+      // Convert expiration string to seconds and add to current timestamp
+      const getExpirationSeconds = (expirationStr: string): number => {
+        const now = Math.floor(Date.now() / 1000); // Current time in seconds
+        const hours = parseInt(expirationStr.replace(/[^0-9]/g, ''));
+        const unit = expirationStr.includes('d') ? 24 : 1; // Convert days to hours
+        const totalHours = hours * unit;
+        const totalSeconds = totalHours * 60 * 60; // Convert hours to seconds
+        return now + totalSeconds;
+      };
+
+      // Create order on backend
+      const createOrderResponse = await fetch('/api/limit-orders/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fromToken,
+          toToken,
+          amount,
+          price,
+          expiration,
+          address,
+          chainId,
+        }),
+      });
+
+      if (!createOrderResponse.ok) {
+        throw new Error(`Failed to create order: ${createOrderResponse.status} ${createOrderResponse.statusText}`);
+      }
+
+      const createOrderResult = await createOrderResponse.json();
       
-      // Note: Real orders would be fetched from the 1inch API via the LimitOrders component
-      // The ActiveOrders component will show orders from the real API, not mock data
+      if (!createOrderResult.success) {
+        throw new Error(`Order creation failed: ${createOrderResult.message}`);
+      }
+
+      const { order: orderData, typedData, orderHash } = createOrderResult.data;
+
+      console.log("Order created on backend:", {
+        orderData,
+        orderHash,
+        typedData
+      });
+
+      // Sign the order (EIP-712) - use the typed data directly from SDK
+      const signature = await signTypedData(address, {
+        types: typedData.types,
+        primaryType: typedData.primaryType,
+        domain: typedData.domain,
+        message: typedData.message,
+      });
+
+      console.log('Order signed successfully:', {
+        orderHash,
+        signature,
+        domain: typedData.domain,
+      });
+
+      // Process signature and submit order to 1inch API
+      console.log('Processing signature and submitting order...');
+      
+      // Prepare order data for submission
+      const submissionData = {
+        orderHash: orderHash,
+        signature: signature,
+        order: orderData,
+        // Additional metadata
+        chainId: chainId,
+        expiration: expiration,
+        createdAt: new Date().toISOString(),
+      };
+
+      console.log('Submitting order data:', orderData);
+
+      // // Submit order to 1inch API
+      // try {
+      //   const response = await fetch('/api/limit-orders/submit', {
+      //     method: 'POST',
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //     },
+      //     body: JSON.stringify(orderData),
+      //   });
+
+      //   if (!response.ok) {
+      //     throw new Error(`Failed to submit order: ${response.status} ${response.statusText}`);
+      //   }
+
+      //   const result = await response.json();
+      //   console.log('Order submitted successfully:', result);
+
+      //   // Clear form
+      //   setAmount('');
+      //   setPrice('');
+      //   setShowPreview(false);
+        
+      //   // Update mission progress
+      //   setOrdersCompleted(prev => prev + 1);
+      //   addExperience(1000); // More XP for limit orders
+        
+      //   // Show success message
+      //   alert('Limit order created, signed, and submitted successfully!');
+        
+      // } catch (submitError) {
+      //   console.error('Error submitting order to API:', submitError);
+      //   // Even if API submission fails, the order was created and signed
+      //   alert('Order created and signed, but failed to submit to API. Check console for details.');
+        
+      //   // Still clear form and update progress since the order was created
+      //   setAmount('');
+      //   setPrice('');
+      //   setShowPreview(false);
+      //   setOrdersCompleted(prev => prev + 1);
+      //   addExperience(1000);
+      // }
       
     } catch (error) {
-      console.error('Error submitting order:', error);
-      // Handle error appropriately
+      console.error('Error creating limit order:', error);
+      alert(`Error creating limit order: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -220,12 +344,12 @@ export default function LimitOrderMissionPage() {
               </div>
             </motion.div>
 
-                    {/* Mission Progress */}
-        <MissionProgress
-          completed={ordersCompleted}
-          total={2}
-          title="🎯 Mission Progress"
-        />
+            {/* Mission Progress */}
+            <MissionProgress
+              completed={ordersCompleted}
+              total={2}
+              title="🎯 Mission Progress"
+            />
 
             {/* Main Layout - Chart and Form Side by Side */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
