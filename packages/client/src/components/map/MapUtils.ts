@@ -175,7 +175,7 @@ export const createTerrainMap = (): string[][] => {
   // Main road network
   for (let x = 0; x < GRID_SIZE; x++) {
     map[15][x] = 'path'; // Northern highway
-    map[40][x] = 'path'; // Central highway  
+    map[40][x] = 'path'; // Central highway
     map[65][x] = 'path'; // Southern highway
   }
   for (let y = 0; y < GRID_SIZE; y++) {

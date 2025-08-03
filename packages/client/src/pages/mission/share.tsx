@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import Layout from '@/components/layout/Layout';
 import LevelUpAnimation from '@/components/LevelUpAnimation';
 import { MissionProgress } from '@/components/mission';
+import { GameStorage, UserCharacter } from '@/utils/localStorage';
 
 interface ShareStatus {
   id: string;
@@ -19,7 +20,9 @@ export default function ShareMissionPage() {
   
   // Mission state
   const [showLevelUp, setShowLevelUp] = React.useState(false);
-  const [sharesCompleted, setSharesCompleted] = React.useState(0);
+  const [sharesCompleted, setSharesCompleted] = React.useState(() => {
+    return GameStorage.getSharesCompleted();
+  });
   const [selectedStatus, setSelectedStatus] = React.useState<ShareStatus | null>(null);
   const [isSharing, setIsSharing] = React.useState(false);
   const [customMessage, setCustomMessage] = React.useState('');
@@ -28,12 +31,15 @@ export default function ShareMissionPage() {
   const [autoVerifyCountdown, setAutoVerifyCountdown] = React.useState(10);
   
   // Character state for level up functionality
-  const [character, setCharacter] = React.useState({
-    level: 50,
-    exp: 2600,
-    maxExp: 3000,
-    name: 'Social Trader',
-    avatar: '📱',
+  const [character, setCharacter] = React.useState<UserCharacter>(() => {
+    const savedCharacter = GameStorage.getCharacter();
+    return savedCharacter || {
+      level: 50,
+      exp: 2600,
+      maxExp: 3000,
+      name: 'Social Trader',
+      avatar: '📱',
+    };
   });
 
   // Available share statuses
@@ -50,16 +56,24 @@ export default function ShareMissionPage() {
   const addExperience = (amount: number) => {
     setCharacter(prev => {
       const newExp = prev.exp + amount;
+      let newCharacter;
+      
       if (newExp >= prev.maxExp) {
         setTimeout(() => setShowLevelUp(true), 1000);
-        return {
+        newCharacter = {
           ...prev,
           level: prev.level + 1,
           exp: newExp - prev.maxExp,
           maxExp: Math.floor(prev.maxExp * 1.2),
         };
+      } else {
+        newCharacter = { ...prev, exp: newExp };
       }
-      return { ...prev, exp: newExp };
+      
+      // Save character data to localStorage
+      GameStorage.saveCharacter(newCharacter);
+      
+      return newCharacter;
     });
   };
 
@@ -96,8 +110,11 @@ export default function ShareMissionPage() {
       console.log('Manual verification completed');
       setVerificationStatus('verified');
       setSharesCompleted(prev => {
-        console.log('Updating shares completed from', prev, 'to', prev + 1);
-        return prev + 1;
+        const newCount = prev + 1;
+        console.log('Updating shares completed from', prev, 'to', newCount);
+        // Save to localStorage
+        GameStorage.saveSharesCompleted(newCount);
+        return newCount;
       });
       addExperience(status.expReward);
       
@@ -141,7 +158,10 @@ export default function ShareMissionPage() {
         clearInterval(countdownTimer);
         setVerificationStatus('verified');
         setSharesCompleted(prev => {
-          return prev + 1;
+          const newCount = prev + 1;
+          // Save to localStorage
+          GameStorage.saveSharesCompleted(newCount);
+          return newCount;
         });
         addExperience(selectedStatus.expReward);
         
@@ -192,7 +212,12 @@ export default function ShareMissionPage() {
       
       if (result.verified) {
         setVerificationStatus('verified');
-        setSharesCompleted(prev => prev + 1);
+        setSharesCompleted(prev => {
+          const newCount = prev + 1;
+          // Save to localStorage
+          GameStorage.saveSharesCompleted(newCount);
+          return newCount;
+        });
         addExperience(status.expReward);
         
         // Mark status as completed

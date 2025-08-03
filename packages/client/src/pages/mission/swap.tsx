@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import Layout from '@/components/layout/Layout';
 import LevelUpAnimation from '@/components/LevelUpAnimation';
 import { MissionProgress } from '@/components/mission';
+import { GameStorage, UserCharacter } from '@/utils/localStorage';
 
 interface Token {
   symbol: string;
@@ -32,15 +33,21 @@ export default function SwapMissionPage() {
   const [gasEstimate, setGasEstimate] = React.useState<string>('~$12.50');
   const [expectedOutput, setExpectedOutput] = React.useState<string>('2,485.32');
   const [showLevelUp, setShowLevelUp] = React.useState(false);
-  const [swapsCompleted, setSwapsCompleted] = React.useState(1);
+  const [swapsCompleted, setSwapsCompleted] = React.useState(() => {
+    const progress = GameStorage.getMissionProgress();
+    return progress.swap.completed;
+  });
 
   // Character state for level up functionality
-  const [character, setCharacter] = React.useState({
-    level: 42,
-    exp: 1800,
-    maxExp: 2000,
-    name: 'Crypto Wizard',
-    avatar: '🧙‍♂️',
+  const [character, setCharacter] = React.useState<UserCharacter>(() => {
+    const savedCharacter = GameStorage.getCharacter();
+    return savedCharacter || {
+      level: 42,
+      exp: 1800,
+      maxExp: 2000,
+      name: 'Crypto Wizard',
+      avatar: '🧙‍♂️',
+    };
   });
 
   const handleSwapTokens = () => {
@@ -63,17 +70,25 @@ export default function SwapMissionPage() {
   const addExperience = (amount: number) => {
     setCharacter(prev => {
       const newExp = prev.exp + amount;
+      let newCharacter;
+      
       if (newExp >= prev.maxExp) {
         // Trigger level up animation
         setTimeout(() => setShowLevelUp(true), 1000);
-        return {
+        newCharacter = {
           ...prev,
           level: prev.level + 1,
           exp: newExp - prev.maxExp,
           maxExp: Math.floor(prev.maxExp * 1.2),
         };
+      } else {
+        newCharacter = { ...prev, exp: newExp };
       }
-      return { ...prev, exp: newExp };
+      
+      // Save character data to localStorage
+      GameStorage.saveCharacter(newCharacter);
+      
+      return newCharacter;
     });
   };
 
@@ -86,7 +101,14 @@ export default function SwapMissionPage() {
     setAmount('');
     
     // Complete swap and add experience
-    setSwapsCompleted(prev => prev + 1);
+    setSwapsCompleted(prev => {
+      const newCount = prev + 1;
+      // Save mission progress to localStorage
+      const progress = GameStorage.getMissionProgress();
+      progress.swap.completed = newCount;
+      GameStorage.saveMissionProgress(progress);
+      return newCount;
+    });
     addExperience(500); // Add 500 EXP for completing a swap
   };
 

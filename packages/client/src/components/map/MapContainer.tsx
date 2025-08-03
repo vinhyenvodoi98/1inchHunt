@@ -12,6 +12,7 @@ import {
   getZoneAtPosition,
   isValidPosition
 } from './MapUtils';
+import { GameStorage, MapPosition } from '@/utils/localStorage';
 import { GameGrid } from './GameGrid';
 import { PlayerCharacter } from './PlayerCharacter';
 import { SpecialZones } from './SpecialZones';
@@ -21,10 +22,18 @@ import { FloatingParticles } from './FloatingParticles';
 
 export const MapContainer: React.FC = () => {
   const router = useRouter();
-  const [playerPos, setPlayerPos] = React.useState<Position>({ x: 40, y: 40 }); // Start in center of massive world
+  
+  // Load initial state from localStorage
+  const [playerPos, setPlayerPos] = React.useState<Position>(() => {
+    const savedPosition = GameStorage.getMapPosition();
+    return savedPosition || { x: 40, y: 40 }; // Default to center
+  });
+  
   const [currentZone, setCurrentZone] = React.useState<SpecialZone | null>(null);
   const [showZoneMessage, setShowZoneMessage] = React.useState(false);
-  const [visitedZones, setVisitedZones] = React.useState<Set<string>>(new Set());
+  const [visitedZones, setVisitedZones] = React.useState<Set<string>>(() => {
+    return GameStorage.getVisitedZones();
+  });
   const [viewportSize, setViewportSize] = React.useState(VIEWPORT_SIZE);
   
   // Update viewport size on window resize for true full-screen adaptation
@@ -72,7 +81,11 @@ export const MapContainer: React.FC = () => {
       if (zone) {
         setCurrentZone(zone);
         setShowZoneMessage(true);
-        setVisitedZones(prev => new Set([...Array.from(prev), `${zone.x}-${zone.y}`]));
+        const newVisitedZones = new Set([...Array.from(visitedZones), `${zone.x}-${zone.y}`]);
+        setVisitedZones(newVisitedZones);
+        
+        // Save visited zones to localStorage
+        GameStorage.saveVisitedZones(newVisitedZones);
         
         // Auto-hide message after 4 seconds
         setTimeout(() => setShowZoneMessage(false), 4000);
@@ -81,7 +94,12 @@ export const MapContainer: React.FC = () => {
         setShowZoneMessage(false);
       }
 
-      return { x: newX, y: newY };
+      const newPosition = { x: newX, y: newY };
+      
+      // Save position to localStorage
+      GameStorage.saveMapPosition(newPosition);
+      
+      return newPosition;
     });
   }, []);
 
