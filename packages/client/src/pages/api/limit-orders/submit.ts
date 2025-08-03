@@ -10,11 +10,7 @@ interface SubmitOrderRequest {
     maker: string;
     receiver: string;
     salt: string;
-    makerTraits: {
-      value: {
-        value: string;
-      };
-    };
+    makerTraits: string;
   };
   signature: string;
   orderHash: string;
@@ -73,7 +69,7 @@ export default async function handler(
         takingAmount: orderData.takingAmount,
         salt: orderData.salt,
         extension: "0x",
-        makerTraits: orderData.makerTraits.value.value,
+        makerTraits: orderData.makerTraits,
       },
     };
 

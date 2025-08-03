@@ -9,7 +9,10 @@ export class ProviderManager {
   private static instance: ProviderManager;
   private provider: any = null;
 
-  private constructor() {}
+  // Private constructor for singleton pattern
+  private constructor() {
+    // Intentionally empty - singleton pattern
+  }
 
   public static getInstance(): ProviderManager {
     if (!ProviderManager.instance) {
@@ -284,7 +287,7 @@ export class ProviderManager {
   /**
    * Wait for transaction receipt
    */
-  public async waitForTransaction(txHash: string, confirmations: number = 1): Promise<any> {
+  public async waitForTransaction(txHash: string, confirmations = 1): Promise<any> {
     try {
       const provider = this.getProvider();
       if (!provider) {

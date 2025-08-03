@@ -130,11 +130,7 @@ export default async function handler(
           makingAmount: order.makingAmount.toString(),
           takingAmount: order.takingAmount.toString(),
           salt: order.salt.toString(),
-          makerTraits: {
-            value: {
-              value: order.makerTraits.value.value.toString()
-            }
-          },
+          makerTraits: order.makerTraits.toString(),
         },
         typedData,
         orderHash,
