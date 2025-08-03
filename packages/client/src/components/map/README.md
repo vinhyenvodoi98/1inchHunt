@@ -1,6 +1,6 @@
 # Map Components
 
-This directory contains the modular components for the HashHunt game map. The map has been refactored from a single monolithic component into multiple smaller, maintainable components.
+This directory contains the modular components for the 1inchHunt game map. The map has been refactored from a single monolithic component into multiple smaller, maintainable components.
 
 ## Component Structure
 

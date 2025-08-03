@@ -386,7 +386,7 @@ export default function GameMap({
 
       {/* Map Title */}
       <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-2">
-        <h3 className="text-white font-bold text-lg">🗺️ HashHunt Realm</h3>
+                        <h3 className="text-white font-bold text-lg">🗺️ 1inchHunt Realm</h3>
         <p className="text-gray-300 text-xs">Explore the DeFi kingdom</p>
       </div>
 

@@ -31,7 +31,7 @@ export const GameSidebar: React.FC<GameSidebarProps> = ({
       >
         <h1 className="text-lg font-bold text-white text-center mb-3">
           🌍 <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            HashHunt Epic Realm
+            1inchHunt Epic Realm
           </span>
         </h1>
         

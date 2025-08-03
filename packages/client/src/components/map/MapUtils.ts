@@ -6,7 +6,7 @@ export interface Position {
 export interface SpecialZone {
   x: number;
   y: number;
-  type: 'swap' | 'advanced-swap' | 'limit-order' | 'boss' | 'chest';
+  type: 'swap' | 'advanced-swap' | 'limit-order' | 'share' | 'boss' | 'chest';
   icon: string;
   name: string;
   description: string;
@@ -248,6 +248,15 @@ export const specialZones: SpecialZone[] = [
     name: 'Strategic Trading Center',
     description: 'Advanced limit order strategies and market analysis',
     action: 'Press SPACE to access strategic trading'
+  },
+  {
+    x: 20,
+    y: 50,
+    type: 'share',
+    icon: '🐦',
+    name: 'Twitter Plaza',
+    description: 'Connect with the community and share your achievements',
+    action: 'Press SPACE to access Twitter sharing'
   },
   
   // Castles and Strongholds

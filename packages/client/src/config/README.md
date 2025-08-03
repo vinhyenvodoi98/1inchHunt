@@ -1,6 +1,6 @@
 # Network Configuration
 
-This directory contains the wagmi configuration for HashHunt, supporting multiple blockchain networks.
+This directory contains the wagmi configuration for 1inchHunt, supporting multiple blockchain networks.
 
 ## Supported Networks
 

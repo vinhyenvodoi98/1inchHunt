@@ -1,6 +1,6 @@
 # Mission System
 
-This directory contains the mission system for the HashHunt game, organized into different mission types with increasing complexity.
+This directory contains the mission system for the 1inchHunt game, organized into different mission types with increasing complexity.
 
 ## Mission Structure
 

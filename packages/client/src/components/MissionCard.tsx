@@ -15,6 +15,7 @@ interface MissionCardProps {
   progress?: number;
   maxProgress?: number;
   experience?: number;
+  missionType?: 'swap' | 'advanced-swap' | 'limit-order' | 'share';
   className?: string;
 }
 
@@ -71,6 +72,7 @@ export default function MissionCard({
   progress = 1,
   maxProgress = 3,
   experience = 500,
+  missionType = 'swap',
   className = '',
 }: MissionCardProps) {
   const router = useRouter();
@@ -80,7 +82,22 @@ export default function MissionCard({
 
   const handleCardClick = () => {
     if (status === 'in_progress' || status === 'pending') {
-      router.push('/mission/swap');
+      switch (missionType) {
+        case 'swap':
+          router.push('/mission/swap');
+          break;
+        case 'advanced-swap':
+          router.push('/mission/advanced-swap');
+          break;
+        case 'limit-order':
+          router.push('/mission/limit-order');
+          break;
+        case 'share':
+          router.push('/mission/share');
+          break;
+        default:
+          router.push('/mission/swap');
+      }
     }
   };
 

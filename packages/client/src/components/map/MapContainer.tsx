@@ -98,6 +98,9 @@ export const MapContainer: React.FC = () => {
         case 'limit-order':
           router.push('/mission/limit-order');
           break;
+        case 'share':
+          router.push('/mission/share');
+          break;
         case 'boss':
           alert(`You challenged the ${currentZone.name}! Battle system coming soon...`);
           break;

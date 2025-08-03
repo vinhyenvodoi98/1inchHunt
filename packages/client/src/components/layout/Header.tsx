@@ -86,7 +86,7 @@ export default function Header() {
                     whileHover={{ scale: 1.05 }}
                     className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
                   >
-                    HashHunt
+                    1inchHunt
                   </motion.h1>
                 </motion.div>
 

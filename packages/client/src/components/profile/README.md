@@ -1,6 +1,6 @@
 # Profile Page Components
 
-This directory contains the components for the HashHunt Profile Page, featuring a pixel-art RPG UI theme with fantasy adventure elements.
+This directory contains the components for the 1inchHunt Profile Page, featuring a pixel-art RPG UI theme with fantasy adventure elements.
 
 ## Components
 
