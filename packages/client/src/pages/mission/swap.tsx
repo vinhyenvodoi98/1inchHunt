@@ -42,11 +42,11 @@ export default function SwapMissionPage() {
   const [character, setCharacter] = React.useState<UserCharacter>(() => {
     const savedCharacter = GameStorage.getCharacter();
     return savedCharacter || {
-      level: 42,
-      exp: 1800,
-      maxExp: 2000,
-      name: 'Crypto Wizard',
-      avatar: '🧙‍♂️',
+      level: 0,
+      exp: 0,
+      maxExp: 500,
+      name: 'New Adventurer',
+      avatar: '👤',
     };
   });
 
@@ -70,20 +70,14 @@ export default function SwapMissionPage() {
   const addExperience = (amount: number) => {
     setCharacter(prev => {
       const newExp = prev.exp + amount;
-      let newCharacter;
+      const level = Math.floor(newExp / 500);
       
-      if (newExp >= prev.maxExp) {
-        // Trigger level up animation
-        setTimeout(() => setShowLevelUp(true), 1000);
-        newCharacter = {
-          ...prev,
-          level: prev.level + 1,
-          exp: newExp - prev.maxExp,
-          maxExp: Math.floor(prev.maxExp * 1.2),
-        };
-      } else {
-        newCharacter = { ...prev, exp: newExp };
-      }
+      const newCharacter = {
+        ...prev,
+        level,
+        exp: newExp,
+        maxExp: 500,
+      };
       
       // Save character data to localStorage
       GameStorage.saveCharacter(newCharacter);

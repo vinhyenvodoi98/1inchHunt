@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { motion } from 'framer-motion';
-
-import LevelUpAnimation from '@/components/LevelUpAnimation';
+import { GameStorage, UserCharacter } from '@/utils/localStorage';
 
 interface CharacterCardProps {
   name?: string;
@@ -10,21 +9,27 @@ interface CharacterCardProps {
   maxExperience?: number;
   avatar?: string;
   className?: string;
+  onSelect?: (character: UserCharacter) => void;
+  isSelected?: boolean;
 }
 
 export default function CharacterCard({
   name = 'Elven Mage',
-  level = 42,
-  experience = 1250,
-  maxExperience = 2000,
+  level = 0,
+  experience = 0,
+  maxExperience = 500,
   avatar = '🧝‍♀️',
   className = '',
+  onSelect,
+  isSelected = false,
 }: CharacterCardProps) {
   const [showLevelUp, setShowLevelUp] = React.useState(false);
+  
+  // Character state - all start from level 0
   const [character, setCharacter] = React.useState({
-    level,
-    exp: experience,
-    maxExp: maxExperience,
+    level: 0,
+    exp: 0,
+    maxExp: 500,
     name,
     avatar,
   });
@@ -35,22 +40,29 @@ export default function CharacterCard({
   const addExperience = (amount: number) => {
     setCharacter(prev => {
       const newExp = prev.exp + amount;
-      if (newExp >= prev.maxExp) {
-        // Trigger level up animation
-        setTimeout(() => setShowLevelUp(true), 300);
-        return {
-          ...prev,
-          level: prev.level + 1,
-          exp: newExp - prev.maxExp, // Carry over excess EXP
-          maxExp: Math.floor(prev.maxExp * 1.2), // Increase EXP requirement
-        };
-      }
-      return { ...prev, exp: newExp };
+      const level = Math.floor(newExp / 500);
+      const expInLevel = newExp % 500;
+      
+      const newCharacter = {
+        ...prev,
+        level,
+        exp: newExp,
+        maxExp: 500,
+      };
+      
+      return newCharacter;
     });
   };
 
   const handleLevelUpComplete = () => {
     setShowLevelUp(false);
+  };
+
+  // Handle character selection
+  const handleSelect = () => {
+    if (onSelect) {
+      onSelect(character);
+    }
   };
 
   return (
@@ -63,9 +75,15 @@ export default function CharacterCard({
         }}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
-        className={`relative bg-gradient-to-br from-purple-900/80 via-blue-900/80 to-indigo-900/80 backdrop-blur-lg border-2 border-white/20 rounded-2xl p-6 shadow-2xl overflow-hidden ${className}`}
+        className={`relative bg-gradient-to-br from-purple-900/80 via-blue-900/80 to-indigo-900/80 backdrop-blur-lg border-2 rounded-2xl p-6 shadow-2xl overflow-hidden cursor-pointer ${className} ${
+          isSelected 
+            ? 'border-amber-400 shadow-amber-400/50' 
+            : 'border-white/20 hover:border-amber-300/50'
+        }`}
         style={{
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+          boxShadow: isSelected 
+            ? '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(245, 158, 11, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)' 
+            : '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
           background: `
             linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(59, 130, 246, 0.1) 50%, rgba(99, 102, 241, 0.1) 100%),
             repeating-linear-gradient(
@@ -84,7 +102,19 @@ export default function CharacterCard({
             )
           `,
         }}
+        onClick={handleSelect}
       >
+        {/* Selection indicator */}
+        {isSelected && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="absolute -top-2 -right-2 w-6 h-6 bg-amber-400 rounded-full flex items-center justify-center text-xs font-bold text-black z-10"
+          >
+            ✓
+          </motion.div>
+        )}
+
         {/* Pixel-art style corner decorations */}
         <div className="absolute top-2 left-2 w-3 h-3 bg-amber-400/60 rounded-sm"></div>
         <div className="absolute top-2 right-2 w-3 h-3 bg-amber-400/60 rounded-sm"></div>
@@ -147,7 +177,10 @@ export default function CharacterCard({
             <motion.button
               whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
               whileTap={{ scale: 0.9 }}
-              onClick={() => addExperience(1000)}
+              onClick={(e) => {
+                e.stopPropagation();
+                addExperience(1000);
+              }}
               className="px-2 py-1 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-full transition-all duration-300"
               title="Add 1000 EXP (Test Level Up)"
             >
@@ -203,6 +236,20 @@ export default function CharacterCard({
           </div>
         </motion.div>
 
+        {/* Selection hint */}
+        {!isSelected && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-center mt-3"
+          >
+            <span className="text-xs text-amber-300/70 font-medium">
+              Click to select character
+            </span>
+          </motion.div>
+        )}
+
         {/* Floating particles effect */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
           {[...Array(6)].map((_, i) => (
@@ -237,18 +284,6 @@ export default function CharacterCard({
           transition={{ duration: 0.8 }}
         />
       </motion.div>
-
-      {/* Level Up Animation Overlay */}
-      <LevelUpAnimation
-        isVisible={showLevelUp}
-        oldLevel={character.level - 1}
-        newLevel={character.level}
-        onComplete={handleLevelUpComplete}
-        character={{
-          name: character.name,
-          avatar: character.avatar,
-        }}
-      />
     </>
   );
 } 

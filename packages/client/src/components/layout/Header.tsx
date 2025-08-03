@@ -4,46 +4,12 @@ import { useRouter } from 'next/router';
 import { useAccount } from 'wagmi';
 
 import Wallet from '@/components/Providers/wallet';
-import LevelUpAnimation from '@/components/LevelUpAnimation';
+import { UserLevel } from '@/components/UserLevel';
 
 export default function Header() {
   const router = useRouter();
   const { address } = useAccount();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const [showLevelUp, setShowLevelUp] = React.useState(false);
-
-  // Enhanced Character state with level up functionality
-  const [character, setCharacter] = React.useState({
-    level: 42,
-    exp: 1850,
-    maxExp: 2000,
-    name: 'Arcane Wizard',
-    avatar: '🧙‍♂️',
-  });
-
-  const expPercentage = (character.exp / character.maxExp) * 100;
-
-  // Function to add experience and trigger level up
-  const addExperience = (amount: number) => {
-    setCharacter(prev => {
-      const newExp = prev.exp + amount;
-      if (newExp >= prev.maxExp) {
-        // Trigger level up animation
-        setTimeout(() => setShowLevelUp(true), 500);
-        return {
-          ...prev,
-          level: prev.level + 1,
-          exp: newExp - prev.maxExp, // Carry over excess EXP
-          maxExp: Math.floor(prev.maxExp * 1.2), // Increase EXP requirement
-        };
-      }
-      return { ...prev, exp: newExp };
-    });
-  };
-
-  const handleLevelUpComplete = () => {
-    setShowLevelUp(false);
-  };
 
   return (
     <>
@@ -92,50 +58,10 @@ export default function Header() {
 
                 {/* Character Avatar + Stats */}
                 <div className="hidden lg:flex items-center space-x-4 border-l border-white/20 pl-6">
-                  {/* Character Avatar */}
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => address && router.push(`/profile/${address}`)}
-                    className={`w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-2xl shadow-lg ring-2 ring-amber-300/50 ring-offset-2 ring-offset-transparent transition-all duration-300 ${
-                      address ? 'cursor-pointer hover:ring-amber-200 hover:shadow-xl' : 'cursor-default'
-                    }`}
-                    title={address ? 'View Profile' : 'Connect wallet to view profile'}
-                  >
-                    {character.avatar}
-                  </motion.div>
-
-                  {/* Level and EXP */}
-                  <div className="text-white">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg font-bold text-amber-300">Level {character.level}</span>
-                      {/* Level Up Test Button */}
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => addExperience(200)}
-                        className="px-2 py-1 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded transition-all duration-300"
-                        title="Add 200 EXP (Test Level Up)"
-                      >
-                        +EXP
-                      </motion.button>
-                    </div>
-                    <div className="mt-1">
-                      <div className="w-32 bg-gray-700/50 rounded-full h-2 overflow-hidden">
-                        <motion.div
-                          animate={{ width: `${expPercentage}%` }}
-                          transition={{ duration: 0.5, ease: 'easeOut' }}
-                          className="h-full bg-gradient-to-r from-blue-400 to-purple-500 rounded-full shadow-lg"
-                          style={{
-                            boxShadow: '0 0 10px rgba(147, 51, 234, 0.5)',
-                          }}
-                        />
-                      </div>
-                      <div className="text-xs text-gray-300 mt-1">
-                        {character.exp} / {character.maxExp} XP
-                      </div>
-                    </div>
-                  </div>
+                  <UserLevel 
+                    showLevelUpButton={true}
+                    compact={false}
+                  />
                 </div>
               </div>
 
@@ -236,47 +162,10 @@ export default function Header() {
                 <div className="p-4 space-y-2">
                   {/* Mobile Character Info */}
                   <div className="lg:hidden flex items-center space-x-4 mb-4 pb-4 border-b border-white/10">
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => address && router.push(`/profile/${address}`)}
-                      className={`w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-xl shadow-lg transition-all duration-300 ${
-                        address ? 'cursor-pointer hover:shadow-xl' : 'cursor-default'
-                      }`}
-                      title={address ? 'View Profile' : 'Connect wallet to view profile'}
-                    >
-                      {character.avatar}
-                    </motion.div>
-
-                    <div className="text-white flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-base font-bold text-amber-300">Level {character.level}</span>
-                        <div className="flex space-x-2">
-                          <span className="text-xs bg-green-600/80 px-2 py-1 rounded">💚 100%</span>
-                          <span className="text-xs bg-blue-600/80 px-2 py-1 rounded">💙 85%</span>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => addExperience(200)}
-                            className="px-2 py-1 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded"
-                          >
-                            +EXP
-                          </motion.button>
-                        </div>
-                      </div>
-                      <div className="mt-2">
-                        <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
-                          <motion.div
-                            animate={{ width: `${expPercentage}%` }}
-                            transition={{ duration: 0.5, ease: 'easeOut' }}
-                            className="h-full bg-gradient-to-r from-blue-400 to-purple-500 rounded-full shadow-lg"
-                          />
-                        </div>
-                        <div className="text-xs text-gray-300 mt-1">
-                          {character.exp} / {character.maxExp} XP
-                        </div>
-                      </div>
-                    </div>
+                    <UserLevel 
+                      showLevelUpButton={true}
+                      compact={true}
+                    />
                   </div>
 
                   {/* Mobile Navigation */}
@@ -323,17 +212,7 @@ export default function Header() {
         </div>
       </motion.header>
 
-      {/* Level Up Animation Overlay */}
-      <LevelUpAnimation
-        isVisible={showLevelUp}
-        oldLevel={character.level - 1}
-        newLevel={character.level}
-        onComplete={handleLevelUpComplete}
-        character={{
-          name: character.name,
-          avatar: character.avatar,
-        }}
-      />
+
     </>
   );
 }
