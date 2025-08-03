@@ -1,10 +1,11 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { GameStorage } from '@/utils/localStorage';
 
 interface LevelUpAnimationProps {
   isVisible: boolean;
-  oldLevel: number;
-  newLevel: number;
+  oldLevel?: number;
+  newLevel?: number;
   onComplete: () => void;
   character?: {
     name?: string;
@@ -21,9 +22,30 @@ export default function LevelUpAnimation({
 }: LevelUpAnimationProps) {
   const [showLevelNumber, setShowLevelNumber] = React.useState(false);
   const [showParticles, setShowParticles] = React.useState(false);
+  
+  // Get the actual character data from localStorage
+  const [actualCharacter, setActualCharacter] = React.useState(() => {
+    return GameStorage.getCharacter() || {
+      level: 0,
+      exp: 0,
+      maxExp: 500,
+      name: character.name || 'Hero',
+      avatar: character.avatar || '🧙‍♂️',
+    };
+  });
+
+  // Calculate the correct old and new levels
+  const correctNewLevel = actualCharacter.level;
+  const correctOldLevel = Math.max(0, correctNewLevel - 1);
 
   React.useEffect(() => {
     if (isVisible) {
+      // Update character data from localStorage when animation starts
+      const storedCharacter = GameStorage.getCharacter();
+      if (storedCharacter) {
+        setActualCharacter(storedCharacter);
+      }
+      
       // Sequence the animations
       const timer1 = setTimeout(() => setShowLevelNumber(true), 1000);
       const timer2 = setTimeout(() => setShowParticles(true), 500);
@@ -80,7 +102,7 @@ export default function LevelUpAnimation({
                 transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                 className="w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-5xl border-4 border-amber-300"
               >
-                {character.avatar}
+                {actualCharacter.avatar}
               </motion.div>
 
               {/* Rotating Rings */}
@@ -132,7 +154,7 @@ export default function LevelUpAnimation({
               className="mb-6"
             >
               <p className="text-2xl text-white font-bold text-center">
-                {character.name}
+                {actualCharacter.name}
               </p>
             </motion.div>
 
@@ -153,7 +175,7 @@ export default function LevelUpAnimation({
                     className="text-4xl font-bold text-gray-400"
                     style={{ fontFamily: 'monospace' }}
                   >
-                    {oldLevel}
+                    {correctOldLevel}
                   </motion.div>
 
                   {/* Arrow */}
@@ -186,7 +208,7 @@ export default function LevelUpAnimation({
                     className="text-5xl font-bold text-amber-400"
                     style={{ fontFamily: 'monospace' }}
                   >
-                    {newLevel}
+                    {correctNewLevel}
                   </motion.div>
                 </motion.div>
               )}

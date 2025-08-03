@@ -95,12 +95,8 @@ export default async function handler(
     const expirationTimestamp = getExpirationSeconds(expiration);
     const iexpiration = BigInt(expirationTimestamp);
 
-    console.log("iexpiration", iexpiration);
-
     // Create maker traits
     const makerTraits = new MakerTraits(iexpiration);
-
-    console.log("makerTraits", makerTraits);
 
     // Calculate amounts in wei
     const makingAmount = BigInt(parseFloat(amount) * Math.pow(10, fromToken.decimals));
@@ -134,7 +130,11 @@ export default async function handler(
           makingAmount: order.makingAmount.toString(),
           takingAmount: order.takingAmount.toString(),
           salt: order.salt.toString(),
-          makerTraits: order.makerTraits.toString(),
+          makerTraits: {
+            value: {
+              value: order.makerTraits.value.value.toString()
+            }
+          },
         },
         typedData,
         orderHash,

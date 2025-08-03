@@ -202,49 +202,62 @@ export default function LimitOrderMissionPage() {
         createdAt: new Date().toISOString(),
       };
 
-      console.log('Submitting order data:', orderData);
 
-      // // Submit order to 1inch API
-      // try {
-      //   const response = await fetch('/api/limit-orders/submit', {
-      //     method: 'POST',
-      //     headers: {
-      //       'Content-Type': 'application/json',
-      //     },
-      //     body: JSON.stringify(orderData),
-      //   });
+              // Submit order to 1inch API
+        try {
+          const response = await fetch('/api/limit-orders/submit', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              order: {
+                makerAsset: orderData.makerAsset,
+                takerAsset: orderData.takerAsset,
+                makingAmount: orderData.makingAmount,
+                takingAmount: orderData.takingAmount,
+                maker: orderData.maker,
+                receiver: orderData.receiver,
+                salt: orderData.salt,
+                makerTraits: orderData.makerTraits,
+              },
+              signature: signature,
+              orderHash: orderHash,
+              chainId: chainId,
+            }),
+          });
 
-      //   if (!response.ok) {
-      //     throw new Error(`Failed to submit order: ${response.status} ${response.statusText}`);
-      //   }
+        if (!response.ok) {
+          throw new Error(`Failed to submit order: ${response.status} ${response.statusText}`);
+        }
 
-      //   const result = await response.json();
-      //   console.log('Order submitted successfully:', result);
+        const result = await response.json();
+        console.log('Order submitted successfully:', result);
 
-      //   // Clear form
-      //   setAmount('');
-      //   setPrice('');
-      //   setShowPreview(false);
+        // Clear form
+        setAmount('');
+        setPrice('');
+        setShowPreview(false);
         
-      //   // Update mission progress
-      //   setOrdersCompleted(prev => prev + 1);
-      //   addExperience(1000); // More XP for limit orders
+        // Update mission progress
+        setOrdersCompleted(prev => prev + 1);
+        addExperience(1000); // More XP for limit orders
         
-      //   // Show success message
-      //   alert('Limit order created, signed, and submitted successfully!');
+        // Show success message
+        alert('Limit order created, signed, and submitted successfully!');
         
-      // } catch (submitError) {
-      //   console.error('Error submitting order to API:', submitError);
-      //   // Even if API submission fails, the order was created and signed
-      //   alert('Order created and signed, but failed to submit to API. Check console for details.');
+      } catch (submitError) {
+        console.error('Error submitting order to API:', submitError);
+        // Even if API submission fails, the order was created and signed
+        alert('Order created and signed, but failed to submit to API. Check console for details.');
         
-      //   // Still clear form and update progress since the order was created
-      //   setAmount('');
-      //   setPrice('');
-      //   setShowPreview(false);
-      //   setOrdersCompleted(prev => prev + 1);
-      //   addExperience(1000);
-      // }
+        // Still clear form and update progress since the order was created
+        setAmount('');
+        setPrice('');
+        setShowPreview(false);
+        setOrdersCompleted(prev => prev + 1);
+        addExperience(1000);
+      }
       
     } catch (error) {
       console.error('Error creating limit order:', error);

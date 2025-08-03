@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { Sdk, FetchProviderConnector, LimitOrder, Address } from "@1inch/limit-order-sdk";
+import axios from 'axios';
 
 interface SubmitOrderRequest {
   order: {
@@ -10,9 +10,14 @@ interface SubmitOrderRequest {
     maker: string;
     receiver: string;
     salt: string;
-    makerTraits: string;
+    makerTraits: {
+      value: {
+        value: string;
+      };
+    };
   };
   signature: string;
+  orderHash: string;
   chainId: number;
 }
 
@@ -35,19 +40,19 @@ export default async function handler(
   }
 
   try {
-    const { order: orderData, signature, chainId = 1 }: SubmitOrderRequest = req.body;
+    const { order: orderData, signature, orderHash, chainId = 1 }: SubmitOrderRequest = req.body;
 
     // Validate required fields
-    if (!orderData || !signature) {
+    if (!orderData || !signature || !orderHash) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: order or signature',
+        message: 'Missing required fields: order, signature, or orderHash',
       });
     }
 
     // Get API key from environment
-    const authKey = process.env.INCH_API_KEY;
-    if (!authKey) {
+    const apiKey = process.env.INCH_API_KEY;
+    if (!apiKey) {
       console.error('INCH_API_KEY not found in environment variables');
       return res.status(500).json({
         success: false,
@@ -55,43 +60,59 @@ export default async function handler(
       });
     }
 
-    console.log('Submitting order:', {
-      chainId,
-      maker: orderData.maker,
-      makerAsset: orderData.makerAsset,
-      takerAsset: orderData.takerAsset,
-    });
+    // Prepare the request body for 1inch API
+    const body = {
+      orderHash: orderHash,
+      signature: signature,
+      data: {
+        makerAsset: orderData.makerAsset,
+        takerAsset: orderData.takerAsset,
+        maker: orderData.maker,
+        receiver: orderData.receiver,
+        makingAmount: orderData.makingAmount,
+        takingAmount: orderData.takingAmount,
+        salt: orderData.salt,
+        extension: "0x",
+        makerTraits: orderData.makerTraits.value.value,
+      },
+    };
 
-    // Initialize SDK with same setup as create endpoint
-    const sdk = new Sdk({
-      authKey,
-      networkId: chainId,
-      httpConnector: new FetchProviderConnector()
-    });
-
-
-    // Submit order using SDK
+    // Make HTTP call to 1inch API
     try {
-      const result = await sdk.submitOrder(orderData, signature);
-      console.log("Order submitted successfully:", result);
+      const url = `https://api.1inch.dev/orderbook/v4.0/${chainId}`;
+      
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        params: {},
+        paramsSerializer: {
+          indexes: null,
+        },
+      };
+      console.log("Making request to 1inch API")
+      const response = await axios.post(url, body, config);
+      
+      console.log("Order submitted successfully:", response.data);
 
       // Return success response
       res.status(200).json({
         success: true,
         message: 'Order submitted successfully to 1inch',
         data: {
-          result,
+          result: response.data,
           timestamp: new Date().toISOString(),
         },
       });
 
-    } catch (sdkError) {
-      console.error("Failed to submit order:", sdkError);
+    } catch (apiError) {
+      console.error("Failed to submit order to 1inch API:", apiError);
       
       return res.status(500).json({
         success: false,
         message: 'Failed to submit order to 1inch',
-        error: sdkError instanceof Error ? sdkError.message : 'Unknown SDK error',
+        error: apiError instanceof Error ? apiError.message : 'Unknown API error',
       });
     }
 
