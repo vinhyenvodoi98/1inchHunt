@@ -9,6 +9,7 @@ export interface Token {
   decimals: number;
   price: number;
   logo?: string;
+  address?: string;
 }
 
 interface TokenSelectorProps {

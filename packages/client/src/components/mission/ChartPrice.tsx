@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { Token } from './TokenSelector';
+import { Token } from '@/constant/tokens';
 
 interface PriceData {
   timestamp: number;
@@ -14,6 +14,7 @@ interface ChartPriceProps {
   chainId?: number;
   className?: string;
   onPeriodChange?: (period: string) => void;
+  onCurrentPriceChange?: (price: number | null) => void;
 }
 
 export const ChartPrice: React.FC<ChartPriceProps> = ({
@@ -23,6 +24,7 @@ export const ChartPrice: React.FC<ChartPriceProps> = ({
   chainId = 1, // Ethereum mainnet
   className = '',
   onPeriodChange,
+  onCurrentPriceChange,
 }) => {
   const [priceData, setPriceData] = React.useState<PriceData[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -47,7 +49,7 @@ export const ChartPrice: React.FC<ChartPriceProps> = ({
     setError(null);
 
     try {
-      const response = await fetch(`/api/charts/price?fromToken=${fromToken.symbol}&toToken=${toToken.symbol}&period=${period}&chainId=${chainId}`);
+      const response = await fetch(`/api/charts/price?fromToken=${fromToken.address || fromToken.symbol}&toToken=${toToken.address || toToken.symbol}&period=${period}&chainId=${chainId}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch price data');
@@ -75,6 +77,13 @@ export const ChartPrice: React.FC<ChartPriceProps> = ({
   React.useEffect(() => {
     fetchPriceData();
   }, [fetchPriceData]);
+
+  // Notify parent component when current price changes
+  React.useEffect(() => {
+    if (onCurrentPriceChange) {
+      onCurrentPriceChange(currentPrice);
+    }
+  }, [currentPrice, onCurrentPriceChange]);
 
   // Simple chart rendering using SVG
   const renderChart = () => {

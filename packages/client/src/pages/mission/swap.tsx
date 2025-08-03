@@ -6,27 +6,13 @@ import Layout from '@/components/layout/Layout';
 import LevelUpAnimation from '@/components/LevelUpAnimation';
 import { MissionProgress, GasPrice } from '@/components/mission';
 import { GameStorage, UserCharacter } from '@/utils/localStorage';
-
-interface Token {
-  symbol: string;
-  name: string;
-  icon: string;
-  balance: number;
-  decimals: number;
-}
-
-const availableTokens: Token[] = [
-  { symbol: 'ETH', name: 'Ethereum', icon: '⟐', balance: 2.5, decimals: 18 },
-  { symbol: 'USDC', name: 'USD Coin', icon: '💎', balance: 1250.0, decimals: 6 },
-  { symbol: 'WBTC', name: 'Wrapped Bitcoin', icon: '₿', balance: 0.15, decimals: 8 },
-  { symbol: 'DAI', name: 'Dai Stablecoin', icon: '🪙', balance: 850.0, decimals: 18 },
-  { symbol: 'UNI', name: 'Uniswap', icon: '🦄', balance: 45.2, decimals: 18 },
-];
+import { availableTokens, getDefaultTokens, type Token } from '@/constant/tokens';
 
 export default function SwapMissionPage() {
   const router = useRouter();
-  const [fromToken, setFromToken] = React.useState<Token>(availableTokens[0]);
-  const [toToken, setToToken] = React.useState<Token>(availableTokens[1]);
+  const defaultTokens = getDefaultTokens('swap');
+  const [fromToken, setFromToken] = React.useState<Token>(defaultTokens.from);
+  const [toToken, setToToken] = React.useState<Token>(defaultTokens.to);
   const [amount, setAmount] = React.useState<string>('');
   const [isSwapping, setIsSwapping] = React.useState(false);
   const [showPreview, setShowPreview] = React.useState(false);

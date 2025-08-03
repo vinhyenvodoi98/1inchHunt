@@ -9,37 +9,28 @@ import {
   TokenSelector,
   AmountInput,
   ExpirationSelector,
-  WalletConnection,
   OrderPreview,
   ActiveOrders,
   ChartPrice,
   LimitOrders,
   MissionProgress,
   GasPrice,
-  type Token,
   type LimitOrder,
 } from '@/components/mission';
-
-const availableTokens: Token[] = [
-  { symbol: 'ETH', name: 'Ethereum', icon: '⟐', balance: 2.5, decimals: 18, price: 3200 },
-  { symbol: 'USDC', name: 'USD Coin', icon: '💎', balance: 1250.0, decimals: 6, price: 1 },
-  { symbol: 'WBTC', name: 'Wrapped Bitcoin', icon: '₿', balance: 0.15, decimals: 8, price: 65000 },
-  { symbol: 'DAI', name: 'Dai Stablecoin', icon: '🪙', balance: 850.0, decimals: 18, price: 1 },
-  { symbol: 'UNI', name: 'Uniswap', icon: '🦄', balance: 45.2, decimals: 18, price: 12.5 },
-  { symbol: 'LINK', name: 'Chainlink', icon: '🔗', balance: 120.5, decimals: 18, price: 18.2 },
-  { symbol: 'AAVE', name: 'Aave', icon: '🦇', balance: 8.7, decimals: 18, price: 95.3 },
-];
+import { availableTokens, getDefaultTokens, type Token } from '@/constant/tokens';
 
 export default function LimitOrderMissionPage() {
   const router = useRouter();
   
   // Form state
-  const [fromToken, setFromToken] = React.useState<Token>(availableTokens[0]);
-  const [toToken, setToToken] = React.useState<Token>(availableTokens[1]);
+  const defaultTokens = getDefaultTokens('limit-order');
+  const [fromToken, setFromToken] = React.useState<Token>(defaultTokens.from);
+  const [toToken, setToToken] = React.useState<Token>(defaultTokens.to);
   const [amount, setAmount] = React.useState<string>('');
   const [price, setPrice] = React.useState<string>('');
   const [expiration, setExpiration] = React.useState<string>('1h');
   const [chartPeriod, setChartPeriod] = React.useState<string>('24H');
+  const [currentChartPrice, setCurrentChartPrice] = React.useState<number | null>(null);
   
   // UI state
   const [showPreview, setShowPreview] = React.useState(false);
@@ -135,6 +126,10 @@ export default function LimitOrderMissionPage() {
   };
 
   const getCurrentPrice = () => {
+    if (currentChartPrice !== null) {
+      return currentChartPrice.toFixed(4);
+    }
+    // Fallback to token prices if chart price is not available
     return (fromToken.price / toToken.price).toFixed(4);
   };
 
@@ -145,8 +140,6 @@ export default function LimitOrderMissionPage() {
   const handleMarketPrice = () => {
     setPrice(getCurrentPrice());
   };
-
-  console.log('Limit order page - isConnected:', isConnected, 'address:', address);
 
   return (
     <>
@@ -235,7 +228,6 @@ export default function LimitOrderMissionPage() {
                     </h2>
                     <p className="text-gray-300 text-sm">{fromToken.symbol}/{toToken.symbol} • {chartPeriod} Period</p>
                   </div>
-                  
                   <ChartPrice
                     fromToken={fromToken}
                     toToken={toToken}
@@ -243,6 +235,7 @@ export default function LimitOrderMissionPage() {
                     chainId={1}
                     className="w-full"
                     onPeriodChange={setChartPeriod}
+                    onCurrentPriceChange={setCurrentChartPrice}
                   />
                 </div>
               </motion.div>
@@ -283,6 +276,7 @@ export default function LimitOrderMissionPage() {
                         maxValue={fromToken.balance}
                         onMaxClick={handleMaxAmount}
                         disabled={!isConnected}
+                        showMaxButton={true}
                       />
 
                       {/* Swap Direction Button */}
@@ -314,6 +308,7 @@ export default function LimitOrderMissionPage() {
                         placeholder={getCurrentPrice()}
                         onMaxClick={handleMarketPrice}
                         disabled={!isConnected}
+                        showMaxButton={false}
                       />
 
                       {/* Current Price Display */}

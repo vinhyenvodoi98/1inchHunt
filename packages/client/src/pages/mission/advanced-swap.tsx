@@ -5,15 +5,7 @@ import { useRouter } from 'next/router';
 import Layout from '@/components/layout/Layout';
 import LevelUpAnimation from '@/components/LevelUpAnimation';
 import { MissionProgress, ChartPrice, GasPrice } from '@/components/mission';
-
-interface Token {
-  symbol: string;
-  name: string;
-  icon: string;
-  balance: number;
-  decimals: number;
-  address?: string;
-}
+import { availableTokens, getDefaultTokens, type Token } from '@/constant/tokens';
 
 interface SwapRoute {
   id: string;
@@ -24,20 +16,11 @@ interface SwapRoute {
   efficiency: number;
 }
 
-const availableTokens: Token[] = [
-  { symbol: 'ETH', name: 'Ethereum', icon: '⟐', balance: 2.5, decimals: 18 },
-  { symbol: 'USDC', name: 'USD Coin', icon: '💎', balance: 1250.0, decimals: 6 },
-  { symbol: 'WBTC', name: 'Wrapped Bitcoin', icon: '₿', balance: 0.15, decimals: 8 },
-  { symbol: 'DAI', name: 'Dai Stablecoin', icon: '🪙', balance: 850.0, decimals: 18 },
-  { symbol: 'UNI', name: 'Uniswap', icon: '🦄', balance: 45.2, decimals: 18 },
-  { symbol: 'LINK', name: 'Chainlink', icon: '🔗', balance: 120.5, decimals: 18 },
-  { symbol: 'AAVE', name: 'Aave', icon: '🦇', balance: 8.7, decimals: 18 },
-];
-
 export default function AdvancedSwapMissionPage() {
   const router = useRouter();
-  const [fromToken, setFromToken] = React.useState<Token>(availableTokens[0]);
-  const [toToken, setToToken] = React.useState<Token>(availableTokens[1]);
+  const defaultTokens = getDefaultTokens('advanced-swap');
+  const [fromToken, setFromToken] = React.useState<Token>(defaultTokens.from);
+  const [toToken, setToToken] = React.useState<Token>(defaultTokens.to);
   const [amount, setAmount] = React.useState<string>('');
   const [isSwapping, setIsSwapping] = React.useState(false);
   const [showPreview, setShowPreview] = React.useState(false);
@@ -47,6 +30,7 @@ export default function AdvancedSwapMissionPage() {
   const [showLevelUp, setShowLevelUp] = React.useState(false);
   const [swapsCompleted, setSwapsCompleted] = React.useState(0);
   const [chartPeriod, setChartPeriod] = React.useState<string>('24H');
+  const [currentChartPrice, setCurrentChartPrice] = React.useState<number | null>(null);
 
   // Character state for level up functionality
   const [character, setCharacter] = React.useState({
@@ -70,11 +54,12 @@ export default function AdvancedSwapMissionPage() {
     setShowPreview(true);
     // Simulate API call for route finding
     setTimeout(() => {
+      const currentPrice = currentChartPrice || 1985; // Fallback to default price if chart price not available
       const mockRoutes: SwapRoute[] = [
         {
           id: 'route1',
           name: 'Uniswap V3 → 1inch',
-          output: (parseFloat(amount) * 1985 * 0.98).toFixed(2),
+          output: (parseFloat(amount) * currentPrice * 0.98).toFixed(2),
           gas: (Math.random() * 15 + 8).toFixed(2),
           priceImpact: '0.12%',
           efficiency: 95,
@@ -82,7 +67,7 @@ export default function AdvancedSwapMissionPage() {
         {
           id: 'route2',
           name: 'SushiSwap → Balancer',
-          output: (parseFloat(amount) * 1985 * 0.99).toFixed(2),
+          output: (parseFloat(amount) * currentPrice * 0.99).toFixed(2),
           gas: (Math.random() * 20 + 12).toFixed(2),
           priceImpact: '0.08%',
           efficiency: 92,
@@ -90,7 +75,7 @@ export default function AdvancedSwapMissionPage() {
         {
           id: 'route3',
           name: 'Curve → Uniswap V2',
-          output: (parseFloat(amount) * 1985 * 0.97).toFixed(2),
+          output: (parseFloat(amount) * currentPrice * 0.97).toFixed(2),
           gas: (Math.random() * 10 + 5).toFixed(2),
           priceImpact: '0.15%',
           efficiency: 88,
@@ -221,26 +206,13 @@ export default function AdvancedSwapMissionPage() {
                   </div>
 
                   <ChartPrice
-                    fromToken={{ 
-                      symbol: fromToken.symbol, 
-                      name: fromToken.name, 
-                      icon: fromToken.icon, 
-                      balance: fromToken.balance, 
-                      decimals: fromToken.decimals, 
-                      price: 3200 
-                    }}
-                    toToken={{ 
-                      symbol: toToken.symbol, 
-                      name: toToken.name, 
-                      icon: toToken.icon, 
-                      balance: toToken.balance, 
-                      decimals: toToken.decimals, 
-                      price: 1 
-                    }}
+                    fromToken={fromToken}
+                    toToken={toToken}
                     period={chartPeriod}
                     chainId={1}
                     className="w-full"
                     onPeriodChange={setChartPeriod}
+                    onCurrentPriceChange={setCurrentChartPrice}
                   />
                 </div>
               </motion.div>
@@ -260,6 +232,13 @@ export default function AdvancedSwapMissionPage() {
                         ⚡ ADVANCED SWAP ⚡
                       </h2>
                       <p className="text-gray-300 text-sm">Multi-route optimization</p>
+                      {currentChartPrice && (
+                        <div className="mt-2 p-2 bg-black/30 rounded-lg border border-white/20">
+                          <p className="text-green-400 font-mono text-sm">
+                            Current Price: {currentChartPrice.toFixed(4)} {toToken.symbol}/{fromToken.symbol}
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                 {/* From Token Section */}

@@ -21,6 +21,7 @@ const TOKEN_ADDRESSES: { [key: string]: string } = {
   'UNI': '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
   'LINK': '0x514910771af9ca656af840dff83e8264ecf986ca',
   'AAVE': '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
+  '1INCH': '0x111111111117dc0aa78b770fa6a738034120c302',
 };
 
 export default async function handler(
@@ -38,9 +39,17 @@ export default async function handler(
   }
 
   try {
-    // Get token addresses
-    const fromTokenAddress = TOKEN_ADDRESSES[fromToken as string];
-    const toTokenAddress = TOKEN_ADDRESSES[toToken as string];
+    // Use token addresses directly if provided, otherwise fall back to symbol mapping
+    let fromTokenAddress = fromToken as string;
+    let toTokenAddress = toToken as string;
+
+    // If the tokens are symbols (not addresses), map them to addresses
+    if (!fromTokenAddress.startsWith('0x')) {
+      fromTokenAddress = TOKEN_ADDRESSES[fromToken as string];
+    }
+    if (!toTokenAddress.startsWith('0x')) {
+      toTokenAddress = TOKEN_ADDRESSES[toToken as string];
+    }
 
     if (!fromTokenAddress || !toTokenAddress) {
       return res.status(400).json({ 

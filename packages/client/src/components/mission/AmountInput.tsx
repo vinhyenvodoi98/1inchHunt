@@ -10,6 +10,7 @@ interface AmountInputProps {
   onMaxClick?: () => void;
   disabled?: boolean;
   className?: string;
+  showMaxButton?: boolean;
 }
 
 export const AmountInput: React.FC<AmountInputProps> = ({
@@ -21,6 +22,7 @@ export const AmountInput: React.FC<AmountInputProps> = ({
   onMaxClick,
   disabled = false,
   className = '',
+  showMaxButton = true,
 }) => {
   return (
     <motion.div 
@@ -41,14 +43,24 @@ export const AmountInput: React.FC<AmountInputProps> = ({
           disabled={disabled}
           className="w-full bg-black/30 border-2 border-teal-500/50 rounded-xl px-4 py-3 text-white font-mono text-xl focus:border-teal-400 focus:outline-none transition-all duration-300 disabled:opacity-50"
         />
-        {onMaxClick && maxValue && (
+        {onMaxClick && showMaxButton && (
           <button
             onClick={onMaxClick}
-            disabled={disabled}
-            className="absolute right-2 top-2 px-3 py-1 bg-amber-500 hover:bg-amber-400 disabled:bg-gray-500 text-black text-xs font-bold rounded-lg transition-all duration-300"
+            disabled={disabled || (maxValue !== undefined && maxValue <= 0)}
+            className={`absolute right-2 top-4 px-3 py-1 text-xs font-bold rounded-lg transition-all duration-300 ${
+              disabled || (maxValue !== undefined && maxValue <= 0)
+                ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                : 'bg-amber-500 hover:bg-amber-400 text-black'
+            }`}
+            title={maxValue !== undefined && maxValue <= 0 ? 'Insufficient balance' : 'Set to maximum amount'}
           >
             MAX
           </button>
+        )}
+        {maxValue !== undefined && label.toLowerCase().includes('amount') && (
+          <div className="mt-2 text-right text-xs text-gray-400">
+            Balance: {maxValue}
+          </div>
         )}
       </div>
     </motion.div>
