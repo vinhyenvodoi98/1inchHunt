@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 
 import Layout from '@/components/layout/Layout';
 import LevelUpAnimation from '@/components/LevelUpAnimation';
-import { MissionProgress, ChartPrice } from '@/components/mission';
+import { MissionProgress, ChartPrice, GasPrice } from '@/components/mission';
 
 interface Token {
   symbol: string;
@@ -414,6 +414,16 @@ export default function AdvancedSwapMissionPage() {
                     </div>
                   </motion.div>
                 )}
+
+                {/* Gas Price Component */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.85 }}
+                  className="mb-6"
+                >
+                  <GasPrice compact={true} />
+                </motion.div>
 
                 {/* Routes Preview */}
                 {showPreview && routes.length > 0 && (

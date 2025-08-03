@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 
 import Layout from '@/components/layout/Layout';
 import LevelUpAnimation from '@/components/LevelUpAnimation';
-import { MissionProgress } from '@/components/mission';
+import { MissionProgress, GasPrice } from '@/components/mission';
 import { GameStorage, UserCharacter } from '@/utils/localStorage';
 
 interface Token {
@@ -416,6 +416,16 @@ export default function SwapMissionPage() {
                     </div>
                   </motion.div>
                 )}
+
+                {/* Gas Price Component */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9 }}
+                  className="mb-6"
+                >
+                  <GasPrice compact={true} />
+                </motion.div>
 
                 {/* Action Buttons */}
                 <motion.div 

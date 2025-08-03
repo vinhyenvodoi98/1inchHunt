@@ -1,36 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
 
-// Token address mapping for common tokens
-const TOKEN_ADDRESSES: { [key: string]: string } = {
-  'ETH': '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-  'USDC': '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-  'USDT': '0xdac17f958d2ee523a2206206994597c13d831ec7',
-  'WBTC': '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
-  'DAI': '0x6b175474e89094c44da98b954eedeac495271d0f',
-  'UNI': '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
-  'LINK': '0x514910771af9ca656af840dff83e8264ecf986ca',
-  'AAVE': '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
-  'WETH': '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-  'MATIC': '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0',
-  'RARI': '0xfca59cd816ab1ead66534d82bc21e7515ce441cf',
-};
-
-// Reverse mapping for display names
-const TOKEN_NAMES: { [key: string]: string } = {
-  '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee': 'ETH',
-  '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48': 'USDC',
-  '0xdac17f958d2ee523a2206206994597c13d831ec7': 'USDT',
-  '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599': 'WBTC',
-  '0x6b175474e89094c44da98b954eedeac495271d0f': 'DAI',
-  '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984': 'UNI',
-  '0x514910771af9ca656af840dff83e8264ecf986ca': 'LINK',
-  '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9': 'AAVE',
-  '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2': 'WETH',
-  '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0': 'MATIC',
-  '0xfca59cd816ab1ead66534d82bc21e7515ce441cf': 'RARI',
-};
-
 interface LimitOrder {
   id: string;
   makerAsset: string;

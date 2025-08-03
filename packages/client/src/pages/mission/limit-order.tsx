@@ -15,6 +15,7 @@ import {
   ChartPrice,
   LimitOrders,
   MissionProgress,
+  GasPrice,
   type Token,
   type LimitOrder,
 } from '@/components/mission';
@@ -326,6 +327,9 @@ export default function LimitOrderMissionPage() {
                         onExpirationChange={setExpiration}
                         disabled={!isConnected}
                       />
+
+                      {/* Gas Price Component */}
+                      <GasPrice compact={true} />
 
                       {/* Action Button */}
                       {!showPreview && (

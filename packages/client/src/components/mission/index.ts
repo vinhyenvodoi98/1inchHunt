@@ -7,4 +7,5 @@ export { ActiveOrders, type LimitOrder } from './ActiveOrders';
 export { ChartPrice } from './ChartPrice';
 export { LimitOrders } from './LimitOrders';
 export { TokenDisplay } from './TokenDisplay';
-export { MissionProgress } from './MissionProgress'; 
+export { MissionProgress } from './MissionProgress';
+export { GasPrice } from './GasPrice'; 
