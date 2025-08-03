@@ -15,8 +15,18 @@ import {
   LimitOrders,
   MissionProgress,
   GasPrice,
-  type LimitOrder,
+  AllowanceChecker,
+  type LimitOrderType,
 } from '@/components/mission';
+
+import {
+  LimitOrder,
+  MakerTraits,
+  Address,
+  Api,
+  getLimitOrderV4Domain,
+} from "@1inch/limit-order-sdk";
+
 import { availableTokens, getDefaultTokens, type Token } from '@/constant/tokens';
 
 export default function LimitOrderMissionPage() {
@@ -37,7 +47,8 @@ export default function LimitOrderMissionPage() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showLevelUp, setShowLevelUp] = React.useState(false);
   const [ordersCompleted, setOrdersCompleted] = React.useState(0);
-  const [activeOrders, setActiveOrders] = React.useState<LimitOrder[]>([]);
+  const [activeOrders, setActiveOrders] = React.useState<LimitOrderType[]>([]);
+  const [isTokenApproved, setIsTokenApproved] = React.useState(false);
   
   // Wagmi wallet hooks
   const { address, isConnected } = useAccount();
@@ -66,6 +77,10 @@ export default function LimitOrderMissionPage() {
     }
     if (!amount || !price || parseFloat(amount) <= 0 || parseFloat(price) <= 0) {
       alert('Please fill in all required fields!');
+      return;
+    }
+    if (!isTokenApproved) {
+      alert('Please approve the token allowance first!');
       return;
     }
     setShowPreview(true);
@@ -238,6 +253,27 @@ export default function LimitOrderMissionPage() {
                     onCurrentPriceChange={setCurrentChartPrice}
                   />
                 </div>
+
+                {/* Real Limit Orders from 1inch */}
+                {isConnected && address && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: 'easeOut', delay: 0.8 }}
+                    className="mt-8"
+                  >
+                    <LimitOrders
+                      address={address}
+                      chainId={1}
+                      limit={20}
+                      statuses="1,2,3"
+                      onOrderClick={(order) => {
+                        console.log('Clicked order:', order);
+                        // Handle order click - could open details modal, etc.
+                      }}
+                    />
+                  </motion.div>
+                )}
               </motion.div>
 
               {/* Right Column - Limit Order Form */}
@@ -277,6 +313,15 @@ export default function LimitOrderMissionPage() {
                         onMaxClick={handleMaxAmount}
                         disabled={!isConnected}
                         showMaxButton={true}
+                      />
+
+                      {/* Allowance Checker */}
+                      <AllowanceChecker
+                        fromToken={fromToken}
+                        amount={amount}
+                        onAllowanceChecked={setIsTokenApproved}
+                        disabled={!isConnected || !amount || parseFloat(amount) <= 0}
+                        chainId={1}
                       />
 
                       {/* Swap Direction Button */}
@@ -332,7 +377,7 @@ export default function LimitOrderMissionPage() {
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           onClick={handlePreview}
-                          disabled={!isConnected || !amount || !price || parseFloat(amount) <= 0 || parseFloat(price) <= 0}
+                          disabled={!isConnected || !amount || !price || parseFloat(amount) <= 0 || parseFloat(price) <= 0 || !isTokenApproved}
                           className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:from-gray-500 disabled:to-gray-600 text-white font-bold rounded-xl transition-all duration-300 uppercase tracking-wide text-sm"
                         >
                           🔮 Preview Order
@@ -369,27 +414,6 @@ export default function LimitOrderMissionPage() {
                 <ActiveOrders
                   orders={activeOrders}
                   onCancelOrder={handleCancelOrder}
-                />
-              </motion.div>
-            )}
-
-            {/* Real Limit Orders from 1inch */}
-            {isConnected && address && (
-              <motion.div
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.8 }}
-                className="mt-8"
-              >
-                <LimitOrders
-                  address={address}
-                  chainId={1}
-                  limit={20}
-                  statuses="1,2,3"
-                  onOrderClick={(order) => {
-                    console.log('Clicked order:', order);
-                    // Handle order click - could open details modal, etc.
-                  }}
                 />
               </motion.div>
             )}

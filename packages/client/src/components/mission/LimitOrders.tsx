@@ -2,7 +2,7 @@ import * as React from 'react';
 import { motion } from 'framer-motion';
 import { TokenDisplay } from './TokenDisplay';
 
-interface LimitOrder {
+interface LimitOrderApiResponse {
   id: string;
   makerAsset: string;
   takerAsset: string;
@@ -33,7 +33,7 @@ interface LimitOrdersProps {
   takerAsset?: string;
   makerAsset?: string;
   className?: string;
-  onOrderClick?: (order: LimitOrder) => void;
+  onOrderClick?: (order: LimitOrderApiResponse) => void;
 }
 
 export const LimitOrders: React.FC<LimitOrdersProps> = ({
@@ -48,7 +48,7 @@ export const LimitOrders: React.FC<LimitOrdersProps> = ({
   className = '',
   onOrderClick,
 }) => {
-  const [orders, setOrders] = React.useState<LimitOrder[]>([]);
+  const [orders, setOrders] = React.useState<LimitOrderApiResponse[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [totalOrders, setTotalOrders] = React.useState(0);

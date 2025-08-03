@@ -2,7 +2,7 @@ import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Token } from './TokenSelector';
 
-export interface LimitOrder {
+export interface LimitOrderType {
   id: string;
   fromToken: Token;
   toToken: Token;
@@ -15,7 +15,7 @@ export interface LimitOrder {
 }
 
 interface ActiveOrdersProps {
-  orders: LimitOrder[];
+  orders: LimitOrderType[];
   onCancelOrder: (orderId: string) => void;
   className?: string;
 }
