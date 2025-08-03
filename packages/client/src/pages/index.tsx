@@ -5,6 +5,8 @@ import CharacterCard from '@/components/CharacterCard';
 import GameMap from '@/components/GameMap';
 import MissionCard from '@/components/MissionCard';
 import { GameStorage, UserCharacter } from '@/utils/localStorage';
+import { characterGallery, type Character } from '@/constant/characters';
+import { CharacterSelectionModal } from '@/components/CharacterSelectionModal';
 
 export default function HomePage() {
   // Character selection state
@@ -17,7 +19,18 @@ export default function HomePage() {
   const [notificationMessage, setNotificationMessage] = React.useState('');
   const [notificationType, setNotificationType] = React.useState<'success' | 'reset'>('success');
 
-  // Handle character selection
+  // Character selection modal state
+  const [showCharacterModal, setShowCharacterModal] = React.useState(false);
+
+  // Check if user is new (no character selected)
+  React.useEffect(() => {
+    const character = GameStorage.getCharacter();
+    if (!character || !character.name) {
+      setShowCharacterModal(true);
+    }
+  }, []);
+
+  // Handle character selection from gallery
   const handleCharacterSelect = (character: UserCharacter) => {
     setSelectedCharacter(character);
     
@@ -35,41 +48,31 @@ export default function HomePage() {
     }, 5000);
   };
 
-  // Character gallery data - all start from level 0
-  const characterGallery = [
-    {
-      name: "Elven Mage",
-      avatar: "🧝‍♀️",
-    },
-    {
-      name: "Dragon Warrior", 
-      avatar: "🐉",
-    },
-    {
-      name: "Shadow Rogue",
-      avatar: "🥷",
-    },
-    {
-      name: "Crystal Healer",
-      avatar: "🔮",
-    },
-    {
-      name: "Fire Wizard",
-      avatar: "🧙‍♂️",
-    },
-    {
-      name: "Forest Guardian",
-      avatar: "🌳",
-    },
-    {
-      name: "Storm Caller",
-      avatar: "⚡",
-    },
-    {
-      name: "Moon Archer",
-      avatar: "🏹",
-    },
-  ];
+  // Handle character selection from modal
+  const handleModalCharacterSelect = (character: Character) => {
+    const userCharacter: UserCharacter = {
+      name: character.name,
+      avatar: character.avatar,
+      level: 0,
+      exp: 0,
+      maxExp: 500,
+    };
+    
+    setSelectedCharacter(userCharacter);
+    setShowCharacterModal(false);
+    
+    // Show success notification
+    setNotificationMessage(`Welcome, ${character.name}! Your adventure begins!`);
+    setNotificationType('success');
+    setShowNotification(true);
+    
+    // Auto-hide notification after 5 seconds
+    setTimeout(() => {
+      setShowNotification(false);
+    }, 5000);
+  };
+
+
 
   return (
     <div>
@@ -80,8 +83,8 @@ export default function HomePage() {
             initial={{ opacity: 0, scale: 0.5, y: -100 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.5, y: -100 }}
-            transition={{ 
-              duration: 0.6, 
+            transition={{
+              duration: 0.6,
               ease: [0.25, 0.46, 0.45, 0.94],
               type: "spring",
               stiffness: 200,
@@ -332,7 +335,16 @@ export default function HomePage() {
                 <CharacterCard 
                   name={char.name}
                   avatar={char.avatar}
-                  onSelect={handleCharacterSelect}
+                  level={char.level}
+                  experience={char.exp}
+                  maxExperience={char.maxExp}
+                  onSelect={() => handleCharacterSelect({
+                    name: char.name,
+                    avatar: char.avatar,
+                    level: char.level,
+                    exp: char.exp,
+                    maxExp: char.maxExp,
+                  })}
                   isSelected={selectedCharacter?.name === char.name}
                 />
               </motion.div>
@@ -385,6 +397,12 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Character Selection Modal for New Users */}
+      <CharacterSelectionModal
+        isVisible={showCharacterModal}
+        onCharacterSelect={handleModalCharacterSelect}
+      />
     </div>
   );
 }
