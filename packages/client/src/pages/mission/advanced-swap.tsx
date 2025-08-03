@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 
 import Layout from '@/components/layout/Layout';
 import LevelUpAnimation from '@/components/LevelUpAnimation';
+import { MissionProgress, ChartPrice } from '@/components/mission';
 
 interface Token {
   symbol: string;
@@ -11,6 +12,7 @@ interface Token {
   icon: string;
   balance: number;
   decimals: number;
+  address?: string;
 }
 
 interface SwapRoute {
@@ -44,6 +46,7 @@ export default function AdvancedSwapMissionPage() {
   const [selectedRoute, setSelectedRoute] = React.useState<string>('');
   const [showLevelUp, setShowLevelUp] = React.useState(false);
   const [swapsCompleted, setSwapsCompleted] = React.useState(0);
+  const [chartPeriod, setChartPeriod] = React.useState<string>('24H');
 
   // Character state for level up functionality
   const [character, setCharacter] = React.useState({
@@ -158,7 +161,7 @@ export default function AdvancedSwapMissionPage() {
           </div>
 
           {/* Main Content Container */}
-          <div className="relative z-20 w-full max-w-lg mx-4 flex flex-col items-center space-y-6">
+          <div className="relative z-20 w-full max-w-7xl mx-4 flex flex-col space-y-6">
             {/* Back Button */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -193,21 +196,71 @@ export default function AdvancedSwapMissionPage() {
               </div>
             </motion.div>
 
-            {/* Advanced Swap Panel */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 50 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
-              className="w-full"
-            >
-              <div className="relative bg-gradient-to-br from-indigo-900/90 via-purple-900/90 to-pink-900/90 backdrop-blur-xl border-2 border-white/20 rounded-3xl p-6 shadow-2xl">
-                {/* Panel Header */}
-                <div className="text-center mb-6">
-                  <h2 className="text-2xl font-bold text-white mb-2">
-                    ⚡ ADVANCED SWAP ⚡
-                  </h2>
-                  <p className="text-gray-300 text-sm">Multi-route optimization</p>
+            {/* Mission Progress */}
+            <MissionProgress
+              completed={swapsCompleted}
+              total={2}
+              title="🚀 Advanced Progress"
+            />
+
+            {/* Main Layout - Chart and Form Side by Side */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+              {/* Left Column - Large Chart */}
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                className="xl:col-span-2"
+              >
+                <div className="bg-gradient-to-br from-indigo-900/90 via-purple-900/90 to-pink-900/90 backdrop-blur-xl border-2 border-white/20 rounded-3xl p-8 shadow-2xl">
+                  <div className="text-center mb-6">
+                    <h2 className="text-2xl font-bold text-white mb-2">
+                      📈 Price Chart
+                    </h2>
+                    <p className="text-gray-300 text-sm">{fromToken.symbol}/{toToken.symbol} • {chartPeriod} Period</p>
+                  </div>
+
+                  <ChartPrice
+                    fromToken={{ 
+                      symbol: fromToken.symbol, 
+                      name: fromToken.name, 
+                      icon: fromToken.icon, 
+                      balance: fromToken.balance, 
+                      decimals: fromToken.decimals, 
+                      price: 3200 
+                    }}
+                    toToken={{ 
+                      symbol: toToken.symbol, 
+                      name: toToken.name, 
+                      icon: toToken.icon, 
+                      balance: toToken.balance, 
+                      decimals: toToken.decimals, 
+                      price: 1 
+                    }}
+                    period={chartPeriod}
+                    chainId={1}
+                    className="w-full"
+                    onPeriodChange={setChartPeriod}
+                  />
                 </div>
+              </motion.div>
+
+              {/* Right Column - Advanced Swap Form */}
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.4 }}
+                className="xl:col-span-1"
+              >
+                <div className="sticky top-8">
+                  <div className="bg-gradient-to-br from-indigo-900/90 via-purple-900/90 to-pink-900/90 backdrop-blur-xl border-2 border-white/20 rounded-3xl p-6 shadow-2xl">
+                    {/* Panel Header */}
+                    <div className="text-center mb-6">
+                      <h2 className="text-xl font-bold text-white mb-2">
+                        ⚡ ADVANCED SWAP ⚡
+                      </h2>
+                      <p className="text-gray-300 text-sm">Multi-route optimization</p>
+                    </div>
 
                 {/* From Token Section */}
                 <motion.div 
@@ -451,33 +504,10 @@ export default function AdvancedSwapMissionPage() {
                   )}
                 </motion.div>
 
-                {/* Mission Progress */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.0 }}
-                  className="mt-6 p-4 bg-black/20 border border-amber-300/30 rounded-xl"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-amber-300 text-sm font-bold">🎯 Advanced Mission Progress</span>
-                    <span className="text-amber-300 text-sm">{swapsCompleted}/2 Swaps</span>
                   </div>
-                  <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
-                    <motion.div
-                      animate={{ width: `${(swapsCompleted / 2) * 100}%` }}
-                      transition={{ duration: 1.5, ease: 'easeOut' }}
-                      className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
-                      style={{
-                        boxShadow: '0 0 10px rgba(251, 191, 36, 0.5)',
-                      }}
-                    />
-                  </div>
-                  <p className="text-gray-300 text-xs mt-2">
-                    Complete {2 - swapsCompleted} more advanced swaps to finish this mission and earn 800 XP!
-                  </p>
-                </motion.div>
-              </div>
-            </motion.div>
+                </div>
+              </motion.div>
+            </div>
           </div>
 
           {/* Floating Elements */}

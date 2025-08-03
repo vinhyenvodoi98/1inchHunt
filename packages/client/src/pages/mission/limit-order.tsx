@@ -14,6 +14,7 @@ import {
   ActiveOrders,
   ChartPrice,
   LimitOrders,
+  MissionProgress,
   type Token,
   type LimitOrder,
 } from '@/components/mission';
@@ -210,31 +211,12 @@ export default function LimitOrderMissionPage() {
               </div>
             </motion.div>
 
-            {/* Mission Progress */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.0 }}
-              className="mb-8 p-4 bg-black/20 border border-amber-300/30 rounded-xl"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-amber-300 text-sm font-bold">🎯 Mission Progress</span>
-                <span className="text-amber-300 text-sm">{ordersCompleted}/2</span>
-              </div>
-              <div className="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
-                <motion.div
-                  animate={{ width: `${(ordersCompleted / 2) * 100}%` }}
-                  transition={{ duration: 1.5, ease: 'easeOut' }}
-                  className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
-                  style={{
-                    boxShadow: '0 0 10px rgba(251, 191, 36, 0.5)',
-                  }}
-                />
-              </div>
-              <p className="text-gray-300 text-xs mt-2">
-                Complete {2 - ordersCompleted} more orders to finish!
-              </p>
-            </motion.div>
+                    {/* Mission Progress */}
+        <MissionProgress
+          completed={ordersCompleted}
+          total={2}
+          title="🎯 Mission Progress"
+        />
 
             {/* Main Layout - Chart and Form Side by Side */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">

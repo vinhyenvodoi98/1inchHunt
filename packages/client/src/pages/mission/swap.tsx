@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 
 import Layout from '@/components/layout/Layout';
 import LevelUpAnimation from '@/components/LevelUpAnimation';
+import { MissionProgress } from '@/components/mission';
 
 interface Token {
   symbol: string;
@@ -193,6 +194,13 @@ export default function SwapMissionPage() {
                 </p>
               </div>
             </motion.div>
+
+            {/* Mission Progress */}
+            <MissionProgress
+              completed={swapsCompleted}
+              total={3}
+              title="🔄 Swap Progress"
+            />
 
             {/* Floating Swap Panel - Centered */}
             <motion.div
