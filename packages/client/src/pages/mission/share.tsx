@@ -69,6 +69,11 @@ export default function ShareMissionPage() {
       // Save character data to localStorage
       GameStorage.saveCharacter(newCharacter);
       
+      // Show level up animation if level increased
+      if (level > prev.level) {
+        setTimeout(() => setShowLevelUp(true), 1000);
+      }
+      
       return newCharacter;
     });
   };

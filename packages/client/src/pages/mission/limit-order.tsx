@@ -25,6 +25,7 @@ import {
 
 import { availableTokens, getDefaultTokens, type Token } from '@/constant/tokens';
 import { signTypedData } from '@/utils/provider';
+import { GameStorage, type UserCharacter } from '@/utils/localStorage';
 
 export default function LimitOrderMissionPage() {
   const router = useRouter();
@@ -52,13 +53,16 @@ export default function LimitOrderMissionPage() {
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
 
-  // Character state for level up functionality
-  const [character, setCharacter] = React.useState({
-    level: 48,
-    exp: 2400,
-    maxExp: 2800,
-    name: 'Limit Order Master',
-    avatar: '🧙‍♂️',
+  // Character state for level up functionality - sync with localStorage
+  const [character, setCharacter] = React.useState(() => {
+    const savedCharacter = GameStorage.getCharacter();
+    return savedCharacter || {
+      level: 0,
+      exp: 0,
+      maxExp: 500,
+      name: 'New Adventurer',
+      avatar: '👤',
+    };
   });
 
   const handleSwapTokens = () => {
@@ -84,18 +88,27 @@ export default function LimitOrderMissionPage() {
   };
 
   const addExperience = (amount: number) => {
-    setCharacter(prev => {
+    setCharacter((prev: UserCharacter) => {
       const newExp = prev.exp + amount;
-      if (newExp >= prev.maxExp) {
+      const level = Math.floor(newExp / 500);
+      const expInLevel = newExp % 500;
+      
+      const newCharacter = {
+        ...prev,
+        level,
+        exp: newExp,
+        maxExp: 500,
+      };
+      
+      // Save to localStorage
+      GameStorage.saveCharacter(newCharacter);
+      
+      // Show level up animation if level increased
+      if (level > prev.level) {
         setTimeout(() => setShowLevelUp(true), 1000);
-        return {
-          ...prev,
-          level: prev.level + 1,
-          exp: newExp - prev.maxExp,
-          maxExp: Math.floor(prev.maxExp * 1.2),
-        };
       }
-      return { ...prev, exp: newExp };
+      
+      return newCharacter;
     });
   };
 
